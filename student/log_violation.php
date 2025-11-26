@@ -124,7 +124,7 @@ if (!$stmt) {
     exit();
 }
 
-mysqli_stmt_bind_param($stmt, "iisiccs", $exam_id, $student_id, $violation_type, $violation_number, $violation_description, $timestamp, $proof_image_path);
+mysqli_stmt_bind_param($stmt, "iisisss", $exam_id, $student_id, $violation_type, $violation_number, $violation_description, $timestamp, $proof_image_path);
 
 if (mysqli_stmt_execute($stmt)) {
     echo json_encode(['success' => true, 'message' => 'Violation logged successfully']);
