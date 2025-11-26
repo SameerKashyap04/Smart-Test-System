@@ -867,6 +867,13 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
         }
         
         function logTabChangeViolation() {
+            const now = Date.now();
+            const type = 'tab_change';
+            if (lastViolationLogTime[type] && (now - lastViolationLogTime[type] < VIOLATION_COOLDOWN_MS)) {
+                return; // Skip if logged recently
+            }
+            lastViolationLogTime[type] = now;
+
             const snapshot = captureSnapshot();
             // Send violation data to server
             fetch('log_violation.php', {
@@ -904,8 +911,18 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			});
 		}
 		
+		// Violation throttling
+		let lastViolationLogTime = {};
+		const VIOLATION_COOLDOWN_MS = 10000; // 10 seconds between same violation type logs
+
 		// Face monitoring functions
 		function logFaceViolation(violationType) {
+            const now = Date.now();
+            if (lastViolationLogTime[violationType] && (now - lastViolationLogTime[violationType] < VIOLATION_COOLDOWN_MS)) {
+                return; // Skip if logged recently
+            }
+            lastViolationLogTime[violationType] = now;
+
             const snapshot = captureSnapshot();
 			fetch('log_violation.php', {
 				method: 'POST',
