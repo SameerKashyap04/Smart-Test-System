@@ -1320,12 +1320,23 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
         function initializeAudioVisualizer(stream) {
             const canvas = document.getElementById('audio-visualizer');
             if(!canvas) return;
+            
+            // Fix canvas resolution
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
             const ctx = canvas.getContext('2d');
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Resume context if suspended (browser policy)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
             const source = audioContext.createMediaStreamSource(stream);
             const analyser = audioContext.createAnalyser();
             
-            analyser.fftSize = 32;
+            analyser.fftSize = 64; // Increased slightly for better resolution
             source.connect(analyser);
             
             const bufferLength = analyser.frequencyBinCount;
@@ -1342,7 +1353,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 
                 analyser.getByteFrequencyData(dataArray);
                 
-                ctx.fillStyle = 'rgb(0, 0, 0)';
+                // Dark gray background to show it's active
+                ctx.fillStyle = '#222'; 
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 const barWidth = (canvas.width / bufferLength) * 2.5;
@@ -1354,13 +1366,15 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     const value = dataArray[i];
                     sum += value;
                     
-                    barHeight = value / 2;
+                    // Scale bar height to fit canvas
+                    barHeight = (value / 255) * canvas.height;
                     
                     // Visual feedback: Turn red if loud
                     if (value > NOISE_THRESHOLD * 2) {
                         ctx.fillStyle = 'rgb(255, 50, 50)';
                     } else {
-                        ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+                        // Gradient-like color
+                        ctx.fillStyle = 'rgb(' + (value + 100) + ',50,200)';
                     }
                     
                     ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
