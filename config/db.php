@@ -6,14 +6,15 @@
 // 2. Copy the Database Name, Username, and Password
 // 3. Update the variables below:
 
-$is_production = false; // SET THIS TO TRUE ON HOSTINGER
+// Auto-detect environment
+$is_production = (strpos($_SERVER['HTTP_HOST'] ?? '', 'devify.live') !== false);
 
 if ($is_production) {
     // HOSTINGER Credentials
-    $username = 'u123456789_username'; // Replace with Hostinger Username
-    $password = 'YourPassword';        // Replace with Hostinger Password
-    $database = 'u123456789_database'; // Replace with Hostinger Database Name
-    $host = 'localhost';               // Usually localhost for Hostinger
+    $username = 'u414525231_testsytem_db'; // Hostinger Database Username
+    $password = 'Devify@123';              // Hostinger Database Password
+    $database = 'u414525231_testsytem_db'; // Hostinger Database Name
+    $host = 'localhost';
     $port = 3306;
     
     $conn = mysqli_connect($host, $username, $password, $database, $port);
