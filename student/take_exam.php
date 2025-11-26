@@ -446,14 +446,14 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
     <!-- Global Overlays (Moved outside container to ensure clickability) -->
     
     <!-- Camera permission overlay -->
-    <div id="camera-permission-overlay" class="camera-permission-overlay">
+    <div id="camera-permission-overlay" class="camera-permission-overlay" style="z-index: 20000;">
         <div class="camera-permission-box">
             <div class="warning-icon"><i class="fas fa-video"></i></div>
             <h3>Camera Access Required</h3>
             <p>This exam requires camera access for face monitoring to ensure academic integrity. Your face must be visible throughout the exam.</p>
             <p><strong>Note:</strong> Refusing camera access or covering your face will result in automatic exam submission.</p>
-            <button id="allow-camera" class="camera-btn"><i class="fas fa-camera"></i> Allow Camera Access</button>
-            <button id="deny-camera" class="camera-btn danger"><i class="fas fa-times"></i> Deny (Submit Exam)</button>
+            <button id="allow-camera" class="camera-btn" onclick="handleAllowCameraClick()"><i class="fas fa-camera"></i> Allow Camera Access</button>
+            <button id="deny-camera" class="camera-btn danger" onclick="handleDenyCameraClick()"><i class="fas fa-times"></i> Deny (Submit Exam)</button>
         </div>
     </div>
 
@@ -1125,57 +1125,59 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			camera.start();
 		}
 		
+		// Global handlers for camera buttons (to ensure clickability)
+        window.handleAllowCameraClick = async function() {
+            const allowBtn = document.getElementById('allow-camera');
+            const permissionOverlay = document.getElementById('camera-permission-overlay');
+            const faceStatus = document.getElementById('face-status');
+            
+            allowBtn.disabled = true;
+            allowBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Requesting...';
+            
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera API not supported. Please use HTTPS and a modern browser (Chrome/Safari).');
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 200, 
+                        height: 150,
+                        facingMode: 'user'
+                    } 
+                });
+                
+                permissionOverlay.style.display = 'none';
+                document.getElementById('face-monitor').style.display = 'block';
+                cameraReady = true;
+                monitoringEnabled = cameraReady && fullscreenReady;
+                initializeFaceDetection();
+            } catch (error) {
+                console.error('Camera access denied:', error);
+                alert('Camera Error: ' + error.message + '\n\nPlease ensure you are using HTTPS and have allowed camera permissions in your browser settings.');
+                
+                if(faceStatus) {
+                    faceStatus.textContent = 'Camera Denied';
+                    faceStatus.className = 'face-status camera-denied';
+                }
+                
+                // Reset button state to allow retry
+                allowBtn.disabled = false;
+                allowBtn.innerHTML = '<i class="fas fa-camera"></i> Allow Camera Access';
+            }
+        };
+
+        window.handleDenyCameraClick = function() {
+            if(confirm('Are you sure? Refusing camera access will submit your exam immediately.')) {
+                logFaceViolation('camera_access_denied');
+                handleTabChange(); // This locks/submits
+            }
+        };
+		
 		function requestCameraPermission() {
 			const permissionOverlay = document.getElementById('camera-permission-overlay');
-			const allowBtn = document.getElementById('allow-camera');
-			const denyBtn = document.getElementById('deny-camera');
-            const faceStatus = document.getElementById('face-status');
-			
 			permissionOverlay.style.display = 'flex';
-			
-			allowBtn.addEventListener('click', async () => {
-                allowBtn.disabled = true;
-                allowBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Requesting...';
-                
-				try {
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        throw new Error('Camera API not supported. Please use HTTPS and a modern browser (Chrome/Safari).');
-                    }
-
-					const stream = await navigator.mediaDevices.getUserMedia({ 
-						video: { 
-							width: 200, 
-							height: 150,
-							facingMode: 'user'
-						} 
-					});
-					
-					permissionOverlay.style.display = 'none';
-					document.getElementById('face-monitor').style.display = 'block';
-					cameraReady = true;
-					monitoringEnabled = cameraReady && fullscreenReady;
-					initializeFaceDetection();
-				} catch (error) {
-					console.error('Camera access denied:', error);
-                    alert('Camera Error: ' + error.message);
-					faceStatus.textContent = 'Camera Denied';
-					faceStatus.className = 'face-status camera-denied';
-					logFaceViolation('camera_access_denied');
-					
-                    // Reset button state
-                    allowBtn.disabled = false;
-                    allowBtn.innerHTML = '<i class="fas fa-camera"></i> Allow Camera Access';
-                    
-                    // Don't auto-lock immediately on first fail, allow retry
-				}
-			});
-			
-			denyBtn.addEventListener('click', () => {
-                if(confirm('Are you sure? Refusing camera access will submit your exam.')) {
-				    logFaceViolation('camera_access_denied');
-				    handleTabChange(); // This locks/submits
-                }
-			});
+            // Event listeners are now handled via inline onclick
 		}
         
 		// Initialize exam interface
