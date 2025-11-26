@@ -77,6 +77,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
     <!-- TensorFlow.js for Object Detection -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <!-- face-api.js for Impersonation Detection -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
     <!-- Voice Detection -->
     <script src="../assets/js/voice-detection.js"></script>
     <style>
@@ -237,23 +239,34 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			cursor: pointer;
 		}
 		
+        /* Audio Visualizer */
+        #audio-visualizer {
+            width: 100%;
+            height: 50px;
+            background: #000;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        
 		/* Face monitoring styles */
 		.face-monitor {
 			position: fixed;
 			top: 20px;
 			right: 20px;
 			width: 200px;
-			height: 150px;
+			height: auto; /* Allow expansion */
 			border: 2px solid #4e54c8;
 			border-radius: 8px;
 			background: #000;
 			z-index: 1000;
 			overflow: hidden;
+            padding-bottom: 5px;
 		}
 		.face-monitor video {
 			width: 100%;
-			height: 100%;
+			height: 150px; /* Fixed video height */
 			object-fit: cover;
+            display: block;
 		}
 		.face-status {
 			position: absolute;
@@ -470,12 +483,13 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
         </div>
     </div>
 
-    <!-- Face monitoring widget -->
-    <div id="face-monitor" class="face-monitor" style="display: none;">
-        <video id="camera-video" autoplay muted playsinline></video>
-        <canvas id="face-canvas"></canvas>
-        <div id="face-status" class="face-status">Initializing...</div>
-    </div>
+	<!-- Face monitoring widget -->
+	<div id="face-monitor" class="face-monitor" style="display: none;">
+		<video id="camera-video" autoplay muted playsinline></video>
+		<canvas id="face-canvas" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+        <canvas id="audio-visualizer"></canvas>
+		<div id="face-status" class="face-status">Initializing...</div>
+	</div>
 
     <script>
         // Question Navigation Logic
@@ -1227,6 +1241,153 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 console.error("Failed to start speech recognition", e);
             }
         }
+
+        // --- Audio Visualizer ---
+        function initializeAudioVisualizer(stream) {
+            const canvas = document.getElementById('audio-visualizer');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            const analyser = audioContext.createAnalyser();
+            
+            analyser.fftSize = 32;
+            source.connect(analyser);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            function draw() {
+                if(!monitoringEnabled) return;
+                requestAnimationFrame(draw);
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                ctx.fillStyle = 'rgb(0, 0, 0)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+                
+                for(let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 2;
+                    
+                    ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    
+                    x += barWidth + 1;
+                }
+            }
+            draw();
+        }
+
+        // --- Lighting / Environment Check ---
+        function startLightingCheck() {
+            setInterval(() => {
+                if (!cameraReady) return;
+                const video = document.getElementById('camera-video');
+                const canvas = document.createElement('canvas');
+                canvas.width = 100; 
+                canvas.height = 75;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                let r,g,b,avg;
+                let colorSum = 0;
+                
+                for(let x = 0, len = data.length; x < len; x+=4) {
+                    r = data[x];
+                    g = data[x+1];
+                    b = data[x+2];
+                    avg = Math.floor((r+g+b)/3);
+                    colorSum += avg;
+                }
+                
+                const brightness = Math.floor(colorSum / (canvas.width * canvas.height));
+                
+                // Threshold for dark room
+                if (brightness < 30) {
+                    const status = document.getElementById('face-status');
+                    if (status) {
+                        status.textContent = 'Too Dark! Increase Light';
+                        status.className = 'face-status no-face';
+                    }
+                    logFaceViolation('environment_too_dark');
+                }
+            }, 5000);
+        }
+
+        // --- Impersonation Check (Face Recognition) ---
+        let referenceDescriptor = null;
+        async function initializeImpersonationCheck() {
+            try {
+                console.log("Loading Face Recognition Models...");
+                // Load models from a reliable CDN mirror for face-api.js models
+                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                
+                console.log("Face Recognition Models Loaded");
+                
+                // Capture Reference Face after a short delay (to allow camera to settle)
+                setTimeout(captureReferenceFace, 3000);
+                
+                // Start periodic check
+                setInterval(checkImpersonation, 30000); // Check every 30 seconds
+                
+            } catch (e) {
+                console.error("Failed to load face recognition models", e);
+            }
+        }
+
+        async function captureReferenceFace() {
+            const video = document.getElementById('camera-video');
+            if(video.paused || video.ended) return;
+            
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                                           .withFaceLandmarks(true)
+                                           .withFaceDescriptor();
+                                           
+            if (detection) {
+                referenceDescriptor = detection.descriptor;
+                console.log("Reference face captured.");
+                const status = document.getElementById('face-status');
+                if(status) status.textContent = 'Identity Verified';
+            } else {
+                console.warn("Could not capture reference face. Retrying...");
+                setTimeout(captureReferenceFace, 2000);
+            }
+        }
+
+        async function checkImpersonation() {
+            if (!referenceDescriptor) return;
+            
+            const video = document.getElementById('camera-video');
+            if(video.paused || video.ended) return;
+            
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                                           .withFaceLandmarks(true)
+                                           .withFaceDescriptor();
+                                           
+            if (detection) {
+                const distance = faceapi.euclideanDistance(referenceDescriptor, detection.descriptor);
+                // Distance < 0.6 is usually a match
+                if (distance > 0.6) {
+                    console.warn("Impersonation Detected! Distance:", distance);
+                    logFaceViolation('impersonation_suspected');
+                    const status = document.getElementById('face-status');
+                    status.textContent = 'Identity Mismatch!';
+                    status.className = 'face-status no-face';
+                } else {
+                    console.log("Identity confirmed. Distance:", distance);
+                }
+            }
+        }
 		
 		// Global handlers for camera buttons (to ensure clickability)
         window.handleAllowCameraClick = async function() {
@@ -1255,9 +1416,15 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 document.getElementById('face-monitor').style.display = 'block';
                 cameraReady = true;
                 monitoringEnabled = cameraReady && fullscreenReady;
+                
+                // Start all AI modules
                 initializeFaceDetection();
-                initializeObjectDetection(); // Start Object Detection
-                initializeSpeechDetection(); // Start Speech Detection
+                initializeObjectDetection();
+                initializeSpeechDetection();
+                initializeAudioVisualizer(stream); // Start Audio Visualizer
+                initializeImpersonationCheck(); // Start Impersonation Check
+                startLightingCheck(); // Start Environment Check
+                
             } catch (error) {
                 console.error('Camera/Audio access denied:', error);
                 alert('Access Error: ' + error.message + '\n\nPlease ensure you are using HTTPS and have allowed camera/microphone permissions.');
