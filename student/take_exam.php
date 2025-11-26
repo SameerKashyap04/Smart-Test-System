@@ -74,6 +74,9 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <!-- TensorFlow.js for Object Detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
     <!-- Voice Detection -->
     <script src="../assets/js/voice-detection.js"></script>
     <style>
@@ -1122,8 +1125,108 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 				width: 200,
 				height: 150
 			});
-			camera.start();
+            camera.start();
 		}
+
+        // --- Object Detection (Mobile Phone / Book) ---
+        let objectModel = null;
+        let isObjectDetectionRunning = false;
+
+        async function initializeObjectDetection() {
+            try {
+                console.log("Loading Object Detection Model...");
+                objectModel = await cocoSsd.load();
+                console.log("Object Detection Model Loaded");
+                
+                // Run detection loop every 2 seconds
+                setInterval(detectObjects, 2000);
+            } catch (e) {
+                console.error("Failed to load object detection model", e);
+            }
+        }
+
+        async function detectObjects() {
+            if (!objectModel || !cameraReady) return;
+            
+            const video = document.getElementById('camera-video');
+            if (!video || video.paused || video.ended) return;
+
+            try {
+                const predictions = await objectModel.detect(video);
+                
+                predictions.forEach(prediction => {
+                    const class_name = prediction.class.toLowerCase();
+                    if ((class_name === 'cell phone' || class_name === 'book' || class_name === 'laptop') && prediction.score > 0.6) {
+                        console.log('Prohibited Object Detected:', class_name);
+                        
+                        const status = document.getElementById('face-status');
+                        if (status) {
+                            status.textContent = 'Detected: ' + class_name;
+                            status.className = 'face-status no-face';
+                        }
+                        
+                        logFaceViolation('prohibited_object_' + class_name.replace(' ', '_'));
+                    }
+                });
+            } catch (e) {
+                console.error("Object detection error:", e);
+            }
+        }
+
+        // --- Speech Keyword Detection ---
+        function initializeSpeechDetection() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.warn("Speech Recognition API not supported");
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US'; // Default to English
+
+            recognition.onresult = function(event) {
+                const last = event.results.length - 1;
+                const transcript = event.results[last][0].transcript.trim().toLowerCase();
+                console.log("Speech Detected:", transcript);
+
+                // Keywords to flag
+                const suspiciousWords = ['hey google', 'alexa', 'siri', 'answer', 'what is', 'help', 'copy', 'paste', 'chatgpt'];
+                
+                const detectedWord = suspiciousWords.find(word => transcript.includes(word));
+                
+                if (detectedWord) {
+                    console.warn("Suspicious speech detected:", detectedWord);
+                    logFaceViolation('suspicious_speech_' + detectedWord.replace(' ', '_'));
+                    
+                    const status = document.getElementById('face-status');
+                    if (status) {
+                        status.textContent = 'Speech: ' + detectedWord;
+                        status.className = 'face-status no-face';
+                    }
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error", event.error);
+            };
+            
+            // Restart if it stops
+            recognition.onend = function() {
+                if (monitoringEnabled) {
+                    try { recognition.start(); } catch(e) {}
+                }
+            };
+
+            try {
+                recognition.start();
+                console.log("Speech Recognition Started");
+            } catch (e) {
+                console.error("Failed to start speech recognition", e);
+            }
+        }
 		
 		// Global handlers for camera buttons (to ensure clickability)
         window.handleAllowCameraClick = async function() {
@@ -1144,7 +1247,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                         width: 200, 
                         height: 150,
                         facingMode: 'user'
-                    } 
+                    },
+                    audio: true // Request audio for speech detection
                 });
                 
                 permissionOverlay.style.display = 'none';
@@ -1152,12 +1256,14 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 cameraReady = true;
                 monitoringEnabled = cameraReady && fullscreenReady;
                 initializeFaceDetection();
+                initializeObjectDetection(); // Start Object Detection
+                initializeSpeechDetection(); // Start Speech Detection
             } catch (error) {
-                console.error('Camera access denied:', error);
-                alert('Camera Error: ' + error.message + '\n\nPlease ensure you are using HTTPS and have allowed camera permissions in your browser settings.');
+                console.error('Camera/Audio access denied:', error);
+                alert('Access Error: ' + error.message + '\n\nPlease ensure you are using HTTPS and have allowed camera/microphone permissions.');
                 
                 if(faceStatus) {
-                    faceStatus.textContent = 'Camera Denied';
+                    faceStatus.textContent = 'Access Denied';
                     faceStatus.className = 'face-status camera-denied';
                 }
                 
