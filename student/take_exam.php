@@ -779,7 +779,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             return status;
         }
 
-		function logFaceViolation(violationType) {
+        // Tab change detection variables
         let tabChangeCount = 0;
         let maxTabChanges = <?php echo isset($exam['max_tab_changes']) ? (int)$exam['max_tab_changes'] : 3; ?>; // Maximum allowed tab changes from database
         let isTabActive = true;
