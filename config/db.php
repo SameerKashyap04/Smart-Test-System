@@ -12,15 +12,18 @@ $is_production = (strpos($_SERVER['HTTP_HOST'] ?? '', 'devify.live') !== false);
 if ($is_production) {
     // HOSTINGER Credentials
     $username = 'u414525231_testsytem_db'; // Hostinger Database Username
-    $password = 'Devify@123';              // Hostinger Database Password
+    $password = 'SmartTest@2025';          // NEW Password (Update this in Hostinger)
     $database = 'u414525231_testsytem_db'; // Hostinger Database Name
     $host = 'localhost';
     $port = 3306;
     
-    $conn = mysqli_connect($host, $username, $password, $database, $port);
-    
-    if (!$conn) {
-        die("Connection failed: " . mysqli_connect_error());
+    try {
+        $conn = mysqli_connect($host, $username, $password, $database, $port);
+    } catch (mysqli_sql_exception $e) {
+        die("<h1>Database Connection Failed</h1>
+             <p><strong>Error:</strong> Access Denied.</p>
+             <p><strong>Details:</strong> The password in <code>config/db.php</code> does not match the Database Password in Hostinger.</p>
+             <p>Please go to Hostinger -> Databases -> Change Password and set it to: <code>SmartTest@2025</code></p>");
     }
 } else {
     // LOCALHOST / XAMPP SETUP
