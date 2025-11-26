@@ -60,5 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Redirect back to login page with error message
     header("Location: ../index.php");
     exit();
+} else {
+    // If accessed directly without POST data, redirect to login page
+    header("Location: ../index.php");
+    exit();
 }
 ?>
