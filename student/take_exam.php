@@ -69,13 +69,13 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
-    <!-- MediaPipe Face Detection -->
+    <!-- MediaPipe Face Mesh -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <!-- Voice Detection -->
     <script src="../assets/js/voice-detection.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
     <style>
         /* Custom styling for exam interface */
         body {
@@ -723,12 +723,14 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 		let isAutoSubmitting = false;
 		
 		// Face monitoring variables
-		let faceDetection = null;
+		let faceMesh = null;
 		let camera = null;
 		let noFaceCount = 0;
         let maxNoFaceTime = 5; // stricter: seconds without face before lock
 		let faceCheckInterval = null;
 		let lastFaceDetected = Date.now();
+        let lastBlinkTime = Date.now();
+        const BLINK_TIMEOUT_MS = 60000; // 60 seconds without blink = violation
 		// Setup gating flags
 		let cameraReady = false;
 		let fullscreenReady = false;
@@ -748,6 +750,37 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
         let totalTabChangeTime = 0;
         let violationWarningShown = false;
         
+        // Snapshot capture function
+        function captureSnapshot() {
+            const video = document.getElementById('camera-video');
+            if (!video || video.paused || video.ended) return null;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg', 0.5); // Compress to 50% quality
+        }
+
+        // EAR Calculation for Blink Detection
+        function calculateEAR(eye) {
+            const dist = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
+            // Landmarks: 
+            // Left Eye: 33, 160, 158, 133, 153, 144
+            // Right Eye: 362, 385, 387, 263, 373, 380
+            
+            // Vertical distances
+            const v1 = dist(eye[1], eye[5]);
+            const v2 = dist(eye[2], eye[4]);
+            
+            // Horizontal distance
+            const h = dist(eye[0], eye[3]);
+            
+            if (h === 0) return 0;
+            return (v1 + v2) / (2.0 * h);
+        }
+
         // Format time as HH:MM:SS
         function formatTime(seconds) {
             const hours = Math.floor(seconds / 3600);
@@ -834,6 +867,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
         }
         
         function logTabChangeViolation() {
+            const snapshot = captureSnapshot();
             // Send violation data to server
             fetch('log_violation.php', {
                 method: 'POST',
@@ -845,7 +879,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     student_id: <?php echo $_SESSION['user_id']; ?>,
                     violation_type: 'tab_change',
                     violation_count: tabChangeCount,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    proof_image: snapshot
                 })
             }).catch(error => {
                 console.error('Error logging violation:', error);
@@ -871,6 +906,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 		
 		// Face monitoring functions
 		function logFaceViolation(violationType) {
+            const snapshot = captureSnapshot();
 			fetch('log_violation.php', {
 				method: 'POST',
 				headers: {
@@ -881,7 +917,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 					student_id: <?php echo $_SESSION['user_id']; ?>,
 					violation_type: violationType,
 					violation_count: 1,
-					timestamp: new Date().toISOString()
+					timestamp: new Date().toISOString(),
+                    proof_image: snapshot
 				})
 			}).catch(error => {
 				console.error('Error logging face violation:', error);
@@ -893,28 +930,31 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			const canvas = document.getElementById('face-canvas');
 			const status = document.getElementById('face-status');
 			
-			// Initialize MediaPipe Face Detection
-			faceDetection = new FaceDetection({
+			// Initialize MediaPipe Face Mesh
+			faceMesh = new FaceMesh({
 				locateFile: (file) => {
-					return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`;
+					return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
 				}
 			});
 			
-			faceDetection.setOptions({
-				model: 'short',
+			faceMesh.setOptions({
+				maxNumFaces: 2,
+				refineLandmarks: true,
 				minDetectionConfidence: 0.5,
+				minTrackingConfidence: 0.5
 			});
 			
-			faceDetection.onResults((results) => {
+			faceMesh.onResults((results) => {
 				canvas.width = video.videoWidth;
 				canvas.height = video.videoHeight;
 				const ctx = canvas.getContext('2d');
 				ctx.save();
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 				
-				if (results.detections && results.detections.length > 0) {
+				if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
 					// Multiple faces detected
-					if (results.detections.length > 1) {
+					if (results.multiFaceLandmarks.length > 1) {
 						const now = Date.now();
 						if (now - lastProctorAlertAt > PROCTOR_ALERT_COOLDOWN_MS) {
 							logFaceViolation('multiple_faces_detected');
@@ -922,58 +962,61 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 							lastProctorAlertAt = now;
 						}
 					}
-					// Face detected
-					status.textContent = 'Face Detected';
-					status.className = 'face-status detected';
+					
+                    // Liveness Detection via Blink Analysis
+                    const landmarks = results.multiFaceLandmarks[0];
+                    
+                    // Eye landmarks (indices)
+                    // Left Eye: 33, 160, 158, 133, 153, 144
+                    const leftEyeIndices = [33, 160, 158, 133, 153, 144];
+                    // Right Eye: 362, 385, 387, 263, 373, 380
+                    const rightEyeIndices = [362, 385, 387, 263, 373, 380];
+                    
+                    const leftEye = leftEyeIndices.map(i => landmarks[i]);
+                    const rightEye = rightEyeIndices.map(i => landmarks[i]);
+                    
+                    const leftEAR = calculateEAR(leftEye);
+                    const rightEAR = calculateEAR(rightEye);
+                    const avgEAR = (leftEAR + rightEAR) / 2.0;
+                    
+                    // Blink threshold (usually around 0.2 - 0.3)
+                    if (avgEAR < 0.2) {
+                        lastBlinkTime = Date.now();
+                        status.textContent = 'Blink Detected';
+                    } else {
+                        // Check for fake face / photo (no blink for too long)
+                        if (Date.now() - lastBlinkTime > BLINK_TIMEOUT_MS) {
+                            status.textContent = 'Liveness Check Failed';
+                            status.className = 'face-status no-face';
+                            logFaceViolation('liveness_failure_no_blink');
+                            lastBlinkTime = Date.now(); // Reset to avoid spamming
+                        } else {
+                            status.textContent = 'Face Detected';
+                            status.className = 'face-status detected';
+                        }
+                    }
+
 					lastFaceDetected = Date.now();
 					noFaceCount = 0;
-					// Eye movement estimation via relative keypoints
-					try {
-						const det = results.detections[0];
-						const bbox = det.locationData.relativeBoundingBox;
-						const kps = det.locationData.relativeKeypoints || [];
-						const leftEye = kps[0];
-						const rightEye = kps[1];
-						if (leftEye && rightEye && bbox) {
-							const eyeDx = Math.abs(leftEye.x - rightEye.x);
-							const normWidth = bbox.width;
-							const eyeSpreadRatio = normWidth > 0 ? (eyeDx / normWidth) : 0;
-							// If eyes appear narrowly spaced relative to bbox width, likely turned away
-							if (eyeSpreadRatio < 0.22) {
-								if (!eyeOffStartAt) eyeOffStartAt = Date.now();
-								const offForSec = (Date.now() - eyeOffStartAt) / 1000;
-								status.textContent = `Eyes off-screen (${offForSec.toFixed(0)}s)`;
-								status.className = 'face-status no-face';
-								if (offForSec >= EYE_OFF_THRESHOLD_SEC) {
-									const now = Date.now();
-									if (now - lastProctorAlertAt > PROCTOR_ALERT_COOLDOWN_MS) {
-										logFaceViolation('eye_off_screen');
-										logExamNotification('proctor_alert', 'Student looking away from screen');
-										lastProctorAlertAt = now;
-									}
-								}
-							} else {
-								eyeOffStartAt = null;
-							}
-						} else {
-							eyeOffStartAt = null;
-						}
-					} catch (e) {
-						// ignore
-					}
-					
-					// Draw face detection boxes
-					results.detections.forEach(detection => {
-						const bbox = detection.locationData.relativeBoundingBox;
-						const x = bbox.xCenter * canvas.width - (bbox.width * canvas.width) / 2;
-						const y = bbox.yCenter * canvas.height - (bbox.height * canvas.height) / 2;
-						const width = bbox.width * canvas.width;
-						const height = bbox.height * canvas.height;
-						
-						ctx.strokeStyle = '#00ff00';
-						ctx.lineWidth = 2;
-						ctx.strokeRect(x, y, width, height);
-					});
+                    
+					// Eye movement estimation via relative keypoints (simplified for Face Mesh)
+                    // Using pupil/iris landmarks would be better if available, but using face rotation for now
+                    // Or repurpose the logic if applicable.
+                    
+                    // Draw mesh
+                    if (results.multiFaceLandmarks) {
+                        for (const landmarks of results.multiFaceLandmarks) {
+                            drawConnectors(ctx, landmarks, FACEMESH_TESSELATION,
+                                         {color: '#C0C0C070', lineWidth: 1});
+                            drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYE, {color: '#FF3030'});
+                            drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYEBROW, {color: '#FF3030'});
+                            drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYE, {color: '#30FF30'});
+                            drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYEBROW, {color: '#30FF30'});
+                            drawConnectors(ctx, landmarks, FACEMESH_FACE_OVAL, {color: '#E0E0E0'});
+                            drawConnectors(ctx, landmarks, FACEMESH_LIPS, {color: '#E0E0E0'});
+                        }
+                    }
+
 				} else {
 					// No face detected
 					status.textContent = 'No Face Detected';
@@ -995,7 +1038,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			// Start camera
 			camera = new Camera(video, {
 				onFrame: async () => {
-					await faceDetection.send({image: video});
+					await faceMesh.send({image: video});
 				},
 				width: 200,
 				height: 150

@@ -245,6 +245,13 @@ $stats = mysqli_fetch_assoc($stats_result);
                                     <?php echo htmlspecialchars($violation['violation_description'] ?? 'No description'); ?>
                                 </span>
                             </div>
+                            <?php if (!empty($violation['proof_image_path'])): ?>
+                                <button class="btn btn-sm btn-outline-primary view-proof-btn" 
+                                        data-img-src="../<?php echo htmlspecialchars($violation['proof_image_path']); ?>"
+                                        data-bs-toggle="modal" data-bs-target="#proofModal">
+                                    <i class="fas fa-image me-1"></i> View Proof
+                                </button>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="violation-details">
@@ -278,7 +285,33 @@ $stats = mysqli_fetch_assoc($stats_result);
         <?php endif; ?>
     </div>
 
+    <!-- Proof Modal -->
+    <div class="modal fade" id="proofModal" tabindex="-1" aria-labelledby="proofModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="proofModalLabel"><i class="fas fa-camera me-2"></i>Violation Evidence</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center bg-dark">
+                    <img src="" id="proofImage" class="img-fluid" alt="Violation Proof">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const proofModal = document.getElementById('proofModal');
+            proofModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const imgSrc = button.getAttribute('data-img-src');
+                const modalImage = proofModal.querySelector('#proofImage');
+                modalImage.src = imgSrc;
+            });
+        });
+    </script>
 </body>
 </html>

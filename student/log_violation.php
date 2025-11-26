@@ -28,6 +28,7 @@ if (isset($input['type'])) {
     $violation_description = isset($input['description']) ? mysqli_real_escape_string($conn, $input['description']) : '';
     $violation_number = isset($input['violation_number']) ? (int)$input['violation_number'] : 1;
     $timestamp = isset($input['timestamp']) ? date('Y-m-d H:i:s', $input['timestamp'] / 1000) : date('Y-m-d H:i:s');
+    $proof_image = isset($input['proof_image']) ? $input['proof_image'] : null;
 } else {
     // Old format
     $exam_id = (int)$input['exam_id'];
@@ -36,12 +37,40 @@ if (isset($input['type'])) {
     $violation_description = isset($input['description']) ? mysqli_real_escape_string($conn, $input['description']) : '';
     $violation_number = isset($input['violation_count']) ? (int)$input['violation_count'] : 1;
     $timestamp = isset($input['timestamp']) ? $input['timestamp'] : date('Y-m-d H:i:s');
+    $proof_image = isset($input['proof_image']) ? $input['proof_image'] : null;
     
     // Verify the student is taking the correct exam
     if ($student_id != $_SESSION['user_id']) {
         http_response_code(403);
         echo json_encode(['error' => 'Forbidden']);
         exit();
+    }
+}
+
+// Handle proof image upload
+$proof_image_path = null;
+if ($proof_image) {
+    // Decode base64 image
+    $image_parts = explode(";base64,", $proof_image);
+    if (count($image_parts) === 2) {
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+        
+        // Create unique filename
+        $filename = 'violation_' . $exam_id . '_' . $student_id . '_' . time() . '_' . uniqid() . '.' . $image_type;
+        $upload_dir = __DIR__ . '/../uploads/violations/';
+        
+        // Ensure directory exists
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        
+        $file_path = $upload_dir . $filename;
+        
+        if (file_put_contents($file_path, $image_base64)) {
+            $proof_image_path = 'uploads/violations/' . $filename;
+        }
     }
 }
 
@@ -79,11 +108,14 @@ if (mysqli_num_rows($result) == 0) {
     if (!isset($columns['violation_count'])) {
         @mysqli_query($conn, "ALTER TABLE exam_violations ADD COLUMN violation_count INT DEFAULT 1 AFTER violation_type");
     }
+    if (!isset($columns['proof_image_path'])) {
+        @mysqli_query($conn, "ALTER TABLE exam_violations ADD COLUMN proof_image_path VARCHAR(255) NULL AFTER violation_description");
+    }
 }
 
 // Insert violation record
-$sql = "INSERT INTO exam_violations (exam_id, student_id, violation_type, violation_count, violation_description, timestamp) 
-        VALUES (?, ?, ?, ?, ?, ?)";
+$sql = "INSERT INTO exam_violations (exam_id, student_id, violation_type, violation_count, violation_description, timestamp, proof_image_path) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 $stmt = mysqli_prepare($conn, $sql);
 if (!$stmt) {
@@ -92,7 +124,7 @@ if (!$stmt) {
     exit();
 }
 
-mysqli_stmt_bind_param($stmt, "iisiss", $exam_id, $student_id, $violation_type, $violation_number, $violation_description, $timestamp);
+mysqli_stmt_bind_param($stmt, "iisiccs", $exam_id, $student_id, $violation_type, $violation_number, $violation_description, $timestamp, $proof_image_path);
 
 if (mysqli_stmt_execute($stmt)) {
     echo json_encode(['success' => true, 'message' => 'Violation logged successfully']);
