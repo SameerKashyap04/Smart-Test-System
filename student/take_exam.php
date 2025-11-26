@@ -1405,6 +1405,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL); // Load Emotion Model
                 
                 console.log("Face Recognition Models Loaded");
                 
@@ -1446,7 +1447,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             
             const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
                                            .withFaceLandmarks(true)
-                                           .withFaceDescriptor();
+                                           .withFaceDescriptor()
+                                           .withFaceExpressions(); // Get Emotions
                                            
             if (detection) {
                 const distance = faceapi.euclideanDistance(referenceDescriptor, detection.descriptor);
@@ -1460,8 +1462,62 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 } else {
                     console.log("Identity confirmed. Distance:", distance);
                 }
+                
+                // Emotion Check
+                const emotions = detection.expressions;
+                // Fear > 0.9 or Disgust > 0.9 are suspicious
+                if (emotions.fear > 0.95) {
+                    logFaceViolation('suspicious_emotion_fear');
+                    const status = document.getElementById('face-status');
+                    if(status) {
+                        status.textContent = 'High Stress Detected';
+                        status.className = 'face-status no-face';
+                    }
+                }
             }
         }
+
+        // --- Keystroke Dynamics (Typing Speed Analysis) ---
+        let keystrokes = [];
+        const MAX_WPM_THRESHOLD = 150; // Impossible speed for normal student
+        
+        document.addEventListener('keydown', function(e) {
+            // Ignore navigation keys
+            if (e.key.length > 1 && e.key !== 'Backspace' && e.key !== 'Enter') return;
+            
+            const now = Date.now();
+            keystrokes.push(now);
+            
+            // Keep only last 60 seconds of keystrokes
+            keystrokes = keystrokes.filter(t => now - t < 60000);
+            
+            // Calculate WPM (approx 5 chars = 1 word)
+            const charCount = keystrokes.length;
+            const wpm = (charCount / 5); 
+            
+            if (wpm > MAX_WPM_THRESHOLD) {
+                console.warn('Impossible typing speed detected:', wpm, 'WPM');
+                logFaceViolation('impossible_typing_speed');
+                const status = document.getElementById('face-status');
+                if(status) {
+                    status.textContent = 'Typing Too Fast (Macro?)';
+                    status.className = 'face-status no-face';
+                }
+                // Clear history to prevent spamming
+                keystrokes = [];
+            }
+        });
+        
+        // Detect Paste Bursts (Large text inserted instantly)
+        document.addEventListener('paste', function(e) {
+            // We rely on 'impossible_typing_speed' or the browser's native paste handling
+            // But we can log large pastes explicitly
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (pastedText.length > 500) { // > 500 chars pasted at once
+                 logFaceViolation('large_paste_detected');
+                 console.warn('Large paste detected:', pastedText.length);
+            }
+        });
 		
 		// Global handlers for camera buttons (to ensure clickability)
         window.handleAllowCameraClick = async function() {
