@@ -12,7 +12,10 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     role ENUM('student', 'examiner') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_verified TINYINT(1) DEFAULT 0,
+    otp_code VARCHAR(6) DEFAULT NULL,
+    otp_expiry DATETIME DEFAULT NULL
 );
 
 -- Create exams table
@@ -100,4 +103,3 @@ CREATE INDEX IF NOT EXISTS idx_exam_violations_exam ON exam_violations(exam_id);
 CREATE INDEX IF NOT EXISTS idx_exam_violations_student ON exam_violations(student_id);
 CREATE INDEX IF NOT EXISTS idx_exam_violations_type ON exam_violations(violation_type);
 CREATE INDEX IF NOT EXISTS idx_exam_violations_timestamp ON exam_violations(timestamp);
-
