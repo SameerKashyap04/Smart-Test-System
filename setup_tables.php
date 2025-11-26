@@ -16,7 +16,9 @@ $queries = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_verified TINYINT(1) DEFAULT 0,
         otp_code VARCHAR(6) DEFAULT NULL,
-        otp_expiry DATETIME DEFAULT NULL
+        otp_expiry DATETIME DEFAULT NULL,
+        id_document_path VARCHAR(255) NULL,
+        email_verified TINYINT(1) DEFAULT 0
     )",
     "CREATE TABLE IF NOT EXISTS exams (
         id INT AUTO_INCREMENT PRIMARY KEY,
