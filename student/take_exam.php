@@ -741,8 +741,42 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 		// Eye off-screen detection
 		let eyeOffStartAt = null;
 		const EYE_OFF_THRESHOLD_SEC = 5;
-        
-        // Tab change detection variables
+
+        // Head Pose Estimation Functions
+        function calculateHeadPose(landmarks) {
+            // Key landmarks
+            const nose = landmarks[1];
+            const leftCheek = landmarks[234];
+            const rightCheek = landmarks[454];
+            const chin = landmarks[152];
+            const forehead = landmarks[10];
+            
+            // Calculate face width and height
+            const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+            const faceHeight = Math.abs(chin.y - forehead.y);
+            
+            // Yaw (Left/Right) Detection
+            // Calculate nose position relative to cheeks (0.5 is center)
+            // If nose is closer to right cheek (in image), user is looking left (in real life)
+            // Note: landmarks x is normalized 0-1
+            const noseRelX = (nose.x - rightCheek.x) / (leftCheek.x - rightCheek.x);
+            
+            // Pitch (Up/Down) Detection
+            // Calculate nose position relative to forehead/chin
+            const noseRelY = (nose.y - forehead.y) / (chin.y - forehead.y);
+            
+            let status = 'center';
+            
+            // Thresholds
+            if (noseRelX < 0.25) status = 'looking_right';
+            if (noseRelX > 0.75) status = 'looking_left';
+            if (noseRelY < 0.35) status = 'looking_up';
+            if (noseRelY > 0.65) status = 'looking_down';
+            
+            return status;
+        }
+
+		function logFaceViolation(violationType) {
         let tabChangeCount = 0;
         let maxTabChanges = <?php echo isset($exam['max_tab_changes']) ? (int)$exam['max_tab_changes'] : 3; ?>; // Maximum allowed tab changes from database
         let isTabActive = true;
@@ -983,6 +1017,28 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     // Liveness Detection via Blink Analysis
                     const landmarks = results.multiFaceLandmarks[0];
                     
+                    // Head Pose Analysis
+                    const poseStatus = calculateHeadPose(landmarks);
+                    if (poseStatus !== 'center') {
+                        if (!eyeOffStartAt) eyeOffStartAt = Date.now();
+                        
+                        const timeLookingAway = (Date.now() - eyeOffStartAt) / 1000;
+                        
+                        if (timeLookingAway > 2) { // Warning after 2 seconds
+                            status.textContent = 'Warning: Look at Screen!';
+                            status.className = 'face-status no-face';
+                        }
+                        
+                        if (timeLookingAway > EYE_OFF_THRESHOLD_SEC) { // Violation after 5 seconds
+                             logFaceViolation(poseStatus);
+                             status.textContent = 'Violation: Looking Away';
+                             eyeOffStartAt = Date.now(); // Reset to prevent rapid firing, will fire again in 5s if still looking away
+                        }
+                    } else {
+                        // Reset if back to center
+                        eyeOffStartAt = null;
+                    }
+
                     // Eye landmarks (indices)
                     // Left Eye: 33, 160, 158, 133, 153, 144
                     const leftEyeIndices = [33, 160, 158, 133, 153, 144];
@@ -999,7 +1055,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     // Blink threshold (usually around 0.2 - 0.3)
                     if (avgEAR < 0.2) {
                         lastBlinkTime = Date.now();
-                        status.textContent = 'Blink Detected';
+                        // status.textContent = 'Blink Detected'; // removed to avoid flickering status
                     } else {
                         // Check for fake face / photo (no blink for too long)
                         if (Date.now() - lastBlinkTime > BLINK_TIMEOUT_MS) {
@@ -1008,8 +1064,11 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                             logFaceViolation('liveness_failure_no_blink');
                             lastBlinkTime = Date.now(); // Reset to avoid spamming
                         } else {
-                            status.textContent = 'Face Detected';
-                            status.className = 'face-status detected';
+                            // Only update status if not looking away
+                            if (!eyeOffStartAt) {
+                                status.textContent = 'Face Detected';
+                                status.className = 'face-status detected';
+                            }
                         }
                     }
 
