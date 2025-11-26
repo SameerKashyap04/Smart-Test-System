@@ -1135,8 +1135,16 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 					if (results.multiFaceLandmarks.length > 1) {
 						const now = Date.now();
 						if (now - lastProctorAlertAt > PROCTOR_ALERT_COOLDOWN_MS) {
-							logFaceViolation('multiple_faces_detected');
-							logExamNotification('proctor_alert', 'Multiple faces detected on camera');
+							logFaceViolation('multiple_faces_detected', 'Serious Violation: Multiple people detected. Exam auto-submitted.');
+							
+                            lockExam('Multiple people detected in camera view! Your exam is being submitted automatically.');
+                            
+                            // Force submit after delay
+                            setTimeout(() => {
+                                document.getElementById('exam-form').setAttribute('data-skip-confirm', '1');
+                                document.getElementById('exam-form').submit();
+                            }, 2000);
+
 							lastProctorAlertAt = now;
 						}
 					}
