@@ -59,4 +59,8 @@ if ($is_production) {
         die("Local connection failed. Please ensure XAMPP/MAMP is running.");
     }
 }
+
+// Set Global Timezone (PHP & MySQL)
+date_default_timezone_set('Asia/Kolkata');
+mysqli_query($conn, "SET time_zone = '+05:30'");
 ?>
