@@ -7,9 +7,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 	exit();
 }
 
-// Ensure required user columns exist
-@mysqli_query($conn, "ALTER TABLE users ADD COLUMN id_document_path VARCHAR(255) NULL");
-@mysqli_query($conn, "ALTER TABLE users ADD COLUMN email_verified TINYINT(1) DEFAULT 0");
+// Ensure required user columns exist - REMOVED to prevent duplicate column errors
+// Schema updates are now handled via setup_tables.php
+// @mysqli_query($conn, "ALTER TABLE users ADD COLUMN id_document_path VARCHAR(255) NULL");
+// @mysqli_query($conn, "ALTER TABLE users ADD COLUMN email_verified TINYINT(1) DEFAULT 0");
 
 $success = null;
 $error = null;
