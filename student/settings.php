@@ -166,40 +166,10 @@ if ($res) {
 						</form>
 					</div>
 				</div>
-				<div class="card mt-3">
-					<div class="card-header"><i class="fas fa-envelope me-2"></i> Email Verification (OTP)</div>
-					<div class="card-body">
-						<p class="mb-2">Status: <?php echo !empty($info['email_verified']) ? '<span class="badge bg-success">Verified</span>' : '<span class="badge bg-warning text-dark">Not Verified</span>'; ?></p>
-						<div class="d-flex gap-2">
-							<input type="text" id="otp-input" class="form-control" placeholder="Enter OTP" style="max-width:200px;">
-							<button class="btn btn-outline-primary" id="send-otp"><i class="fas fa-paper-plane me-1"></i> Send OTP</button>
-							<button class="btn btn-primary" id="verify-otp"><i class="fas fa-check me-1"></i> Verify</button>
-						</div>
-						<small class="text-muted d-block mt-2">OTP will be sent to <?php echo htmlspecialchars($info['email']); ?>.</small>
-					</div>
-				</div>
 			</div>
 		</div>
 	</div>
 
-	<script>
-		document.getElementById('send-otp').addEventListener('click', async function() {
-			try {
-				const res = await fetch('../auth/send_otp.php', { method: 'POST' });
-				const data = await res.json();
-				alert(data.success ? 'OTP sent to your email.' : (data.error || 'Failed to send OTP'));
-			} catch (e) { alert('Failed to send OTP'); }
-		});
-		document.getElementById('verify-otp').addEventListener('click', async function() {
-			const code = document.getElementById('otp-input').value.trim();
-			if (!code) { alert('Enter OTP'); return; }
-			try {
-				const res = await fetch('../auth/verify_otp.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
-				const data = await res.json();
-				if (data.success) { alert('Email verified'); location.reload(); } else { alert(data.error || 'Invalid OTP'); }
-			} catch (e) { alert('Failed to verify OTP'); }
-		});
-	</script>
 </body>
 </html>
 
