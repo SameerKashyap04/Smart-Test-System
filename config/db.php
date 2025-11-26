@@ -12,7 +12,7 @@ $is_production = (strpos($_SERVER['HTTP_HOST'] ?? '', 'devify.live') !== false);
 if ($is_production) {
     // HOSTINGER Credentials
     $username = 'u414525231_smart_test_usr'; // Hostinger Database Username
-    $password = 'Devify@123';                // Hostinger Database Password
+    $password = 'SmartTest@2025';            // Hostinger Database Password
     $database = 'u414525231_smart_test_db';  // Hostinger Database Name
     $host = 'localhost';
     $port = 3306;
