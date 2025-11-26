@@ -939,6 +939,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     exam_id: <?php echo $exam_id; ?>,
                     student_id: <?php echo $_SESSION['user_id']; ?>,
                     violation_type: 'tab_change',
+                    description: violationDescriptions['tab_change'] || 'Student switched tabs or minimized the browser window.',
                     violation_count: tabChangeCount,
                     timestamp: new Date().toISOString(),
                     proof_image: snapshot
@@ -1036,7 +1037,31 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             }
         }
 
-		function logFaceViolation(violationType) {
+        const violationDescriptions = {
+            'multiple_faces_detected': 'Multiple people detected in the camera view.',
+            'no_face_detected': 'Student face not visible in the camera view.',
+            'looking_left': 'Student looking away to the left.',
+            'looking_right': 'Student looking away to the right.',
+            'looking_up': 'Student looking up.',
+            'looking_down': 'Student looking down.',
+            'face_too_close': 'Student face is too close to the screen.',
+            'face_too_far': 'Student face is too far from the screen.',
+            'mouth_open_talking': 'Student mouth open for extended period (potential talking).',
+            'liveness_failure_no_blink': 'Liveness check failed (no blinking detected for 60s).',
+            'impersonation_suspected': 'Face verification failed. Potential impersonation.',
+            'suspicious_emotion_fear': 'High levels of fear/stress detected.',
+            'high_background_noise': 'High background noise levels detected.',
+            'environment_too_dark': 'Environment is too dark for proctoring.',
+            'vm_or_bot_detected': 'Virtual Machine or Bot detected.',
+            'automation_detected': 'Browser automation tools detected.',
+            'devtools_debugger_detected': 'Developer Tools (Debugger) detected.',
+            'impossible_typing_speed': 'Impossible typing speed detected (potential copy-paste/macro).',
+            'large_paste_detected': 'Large amount of text pasted.',
+            'camera_access_denied': 'Camera access was denied by the user.',
+            'tab_change': 'Student switched tabs or minimized the browser window.'
+        };
+
+		function logFaceViolation(violationType, customDescription = null) {
             const now = Date.now();
             if (lastViolationLogTime[violationType] && (now - lastViolationLogTime[violationType] < VIOLATION_COOLDOWN_MS)) {
                 return; // Skip if logged recently
@@ -1044,6 +1069,21 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             lastViolationLogTime[violationType] = now;
 
             const snapshot = captureSnapshot();
+            
+            // Get description from map or format type
+            let description = customDescription;
+            if (!description) {
+                if (violationDescriptions[violationType]) {
+                    description = violationDescriptions[violationType];
+                } else if (violationType.startsWith('prohibited_object_')) {
+                    description = 'Prohibited object detected: ' + violationType.replace('prohibited_object_', '').replace(/_/g, ' ');
+                } else if (violationType.startsWith('suspicious_speech_')) {
+                    description = 'Suspicious speech detected: ' + violationType.replace('suspicious_speech_', '').replace(/_/g, ' ');
+                } else {
+                    description = violationType.replace(/_/g, ' '); // Fallback
+                }
+            }
+
 			fetch('log_violation.php', {
 				method: 'POST',
 				headers: {
@@ -1053,6 +1093,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 					exam_id: <?php echo $exam_id; ?>,
 					student_id: <?php echo $_SESSION['user_id']; ?>,
 					violation_type: violationType,
+                    description: description,
 					violation_count: 1,
 					timestamp: new Date().toISOString(),
                     proof_image: snapshot

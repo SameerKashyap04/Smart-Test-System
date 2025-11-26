@@ -53,21 +53,6 @@ $stats = mysqli_fetch_assoc($stats_result);
             background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
             min-height: 100vh;
         }
-        /* Custom Violation Badges */
-        .badge-violation {
-            padding: 0.6rem 1rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .bg-danger-soft { background: #ffe5e5; color: #e74c3c; border: 1px solid #e74c3c; }
-        .bg-warning-soft { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .bg-info-soft { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        .bg-dark-soft { background: #d6d8d9; color: #1b1e21; border: 1px solid #c6c8ca; }
-        
         .dashboard-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -148,6 +133,18 @@ $stats = mysqli_fetch_assoc($stats_result);
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 600;
+        }
+        .violation-description {
+            background: #f8f9fa;
+            color: #495057;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #dee2e6;
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .violation-count {
             background: #f8f9fa;
@@ -244,43 +241,7 @@ $stats = mysqli_fetch_assoc($stats_result);
 
         <?php if (mysqli_num_rows($violations) > 0): ?>
             <div class="violations-list">
-                <?php 
-                function getViolationConfig($type) {
-                    if (strpos($type, 'prohibited_object') !== false) {
-                        $obj = str_replace('prohibited_object_', '', $type);
-                        return ['icon' => 'fa-mobile-alt', 'label' => 'Object: ' . ucfirst($obj), 'class' => 'bg-danger-soft'];
-                    }
-                    if (strpos($type, 'suspicious_speech') !== false) {
-                        $word = str_replace('suspicious_speech_', '', $type);
-                        return ['icon' => 'fa-microphone-slash', 'label' => 'Speech: "' . ucfirst($word) . '"', 'class' => 'bg-danger-soft'];
-                    }
-                    
-                    switch($type) {
-                        case 'tab_change': return ['icon' => 'fa-window-restore', 'label' => 'Tab Switch', 'class' => 'bg-warning-soft'];
-                        case 'multiple_faces_detected': return ['icon' => 'fa-users', 'label' => 'Multiple Faces', 'class' => 'bg-danger-soft'];
-                        case 'no_face_detected': return ['icon' => 'fa-user-slash', 'label' => 'No Face', 'class' => 'bg-warning-soft'];
-                        case 'liveness_failure_no_blink': return ['icon' => 'fa-image', 'label' => 'Fake Face / Photo', 'class' => 'bg-danger-soft'];
-                        case 'impersonation_suspected': return ['icon' => 'fa-id-card-alt', 'label' => 'Impersonation', 'class' => 'bg-dark-soft'];
-                        case 'environment_too_dark': return ['icon' => 'fa-lightbulb', 'label' => 'Low Light', 'class' => 'bg-info-soft'];
-                        case 'high_background_noise': return ['icon' => 'fa-volume-up', 'label' => 'High Noise', 'class' => 'bg-warning-soft'];
-                        case 'face_too_close': return ['icon' => 'fa-search-plus', 'label' => 'Face Too Close', 'class' => 'bg-info-soft'];
-                        case 'face_too_far': return ['icon' => 'fa-search-minus', 'label' => 'Face Too Far', 'class' => 'bg-info-soft'];
-                        case 'mouth_open_talking': return ['icon' => 'fa-comment-dots', 'label' => 'Talking / Whispering', 'class' => 'bg-danger-soft'];
-                        case 'suspicious_emotion_fear': return ['icon' => 'fa-flushed', 'label' => 'High Stress/Fear', 'class' => 'bg-info-soft'];
-                        case 'impossible_typing_speed': return ['icon' => 'fa-keyboard', 'label' => 'Bot Typing Speed', 'class' => 'bg-dark-soft'];
-                        case 'vm_or_bot_detected': return ['icon' => 'fa-robot', 'label' => 'VM / Bot Detected', 'class' => 'bg-dark-soft'];
-                        case 'devtools_debugger_detected': return ['icon' => 'fa-code', 'label' => 'DevTools Opened', 'class' => 'bg-dark-soft'];
-                        case 'looking_left': return ['icon' => 'fa-arrow-left', 'label' => 'Looking Left', 'class' => 'bg-warning-soft'];
-                        case 'looking_right': return ['icon' => 'fa-arrow-right', 'label' => 'Looking Right', 'class' => 'bg-warning-soft'];
-                        case 'looking_up': return ['icon' => 'fa-arrow-up', 'label' => 'Looking Up', 'class' => 'bg-warning-soft'];
-                        case 'looking_down': return ['icon' => 'fa-arrow-down', 'label' => 'Looking Down', 'class' => 'bg-warning-soft'];
-                        default: return ['icon' => 'fa-exclamation-circle', 'label' => ucfirst(str_replace('_', ' ', $type)), 'class' => 'bg-secondary text-white'];
-                    }
-                }
-                
-                while ($violation = mysqli_fetch_assoc($violations)): 
-                    $config = getViolationConfig($violation['violation_type']);
-                ?>
+                <?php while ($violation = mysqli_fetch_assoc($violations)): ?>
                     <div class="violation-card">
                         <div class="violation-header">
                             <div>
@@ -288,9 +249,12 @@ $stats = mysqli_fetch_assoc($stats_result);
                                 <p class="mb-0 text-muted"><?php echo htmlspecialchars($violation['subject']); ?></p>
                             </div>
                             <div class="d-flex gap-2">
-                                <span class="badge-violation <?php echo $config['class']; ?>">
-                                    <i class="fas <?php echo $config['icon']; ?>"></i>
-                                    <?php echo htmlspecialchars($config['label']); ?>
+                                <span class="violation-type">
+                                    <i class="fas fa-tab me-1"></i>
+                                    <?php echo ucfirst(str_replace('_', ' ', $violation['violation_type'])); ?>
+                                </span>
+                                <span class="violation-description">
+                                    <?php echo htmlspecialchars($violation['violation_description'] ?? 'No description'); ?>
                                 </span>
                             </div>
                             <?php if (!empty($violation['proof_image_path'])): ?>
