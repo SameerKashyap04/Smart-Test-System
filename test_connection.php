@@ -2,8 +2,8 @@
 echo "<h1>Database Connection Test</h1>";
 
 // Test credentials
-$username = 'u414525231_testsytem_db';
-$password = 'SmartTest2025';  // Current password in code
+$username = 'u414525231_testsyetem_usr';
+$password = 'Devify@123';  // Current password in code
 $database = 'u414525231_testsytem_db';
 $host = 'localhost';
 $port = 3306;
