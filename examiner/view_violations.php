@@ -123,28 +123,47 @@ $stats = mysqli_fetch_assoc($stats_result);
         .violation-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .violation-info-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        .violation-badges {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
         .violation-type {
-            background: linear-gradient(135deg, #e74c3c 0%, #ff6b6b 100%);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
+            background: #ffe3e3;
+            color: #e74c3c;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #ffc9c9;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
         }
-        .violation-description {
+        .violation-description-box {
             background: #f8f9fa;
-            color: #495057;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            border: 1px solid #dee2e6;
-            max-width: 300px;
+            color: #333;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            border-left: 3px solid #6c757d;
+            margin-top: 0.8rem;
+            width: 100%;
+        }
+        .proof-btn {
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .violation-count {
             background: #f8f9fa;
@@ -244,44 +263,50 @@ $stats = mysqli_fetch_assoc($stats_result);
                 <?php while ($violation = mysqli_fetch_assoc($violations)): ?>
                     <div class="violation-card">
                         <div class="violation-header">
-                            <div>
-                                <h5 class="mb-1"><?php echo htmlspecialchars($violation['exam_title']); ?></h5>
-                                <p class="mb-0 text-muted"><?php echo htmlspecialchars($violation['subject']); ?></p>
+                            <div class="violation-info-group">
+                                <h5 class="mb-1 fw-bold"><?php echo htmlspecialchars($violation['exam_title']); ?></h5>
+                                <p class="mb-0 text-muted small"><i class="fas fa-book me-1"></i> <?php echo htmlspecialchars($violation['subject']); ?></p>
                             </div>
-                            <div class="d-flex gap-2">
+                            
+                            <div class="violation-badges">
                                 <span class="violation-type">
-                                    <i class="fas fa-tab me-1"></i>
-                                    <?php echo ucfirst(str_replace('_', ' ', $violation['violation_type'])); ?>
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <?php echo htmlspecialchars(str_replace('_', ' ', $violation['violation_type'])); ?>
                                 </span>
-                                <span class="violation-description">
-                                    <?php echo htmlspecialchars($violation['violation_description'] ?? 'No description'); ?>
-                                </span>
+                                
+                                <?php if (!empty($violation['proof_image_path'])): ?>
+                                    <button class="btn btn-sm btn-primary proof-btn" 
+                                            data-img-src="../<?php echo htmlspecialchars($violation['proof_image_path']); ?>"
+                                            data-bs-toggle="modal" data-bs-target="#proofModal">
+                                        <i class="fas fa-camera me-1"></i> View Proof
+                                    </button>
+                                <?php endif; ?>
                             </div>
-                            <?php if (!empty($violation['proof_image_path'])): ?>
-                                <button class="btn btn-sm btn-outline-primary view-proof-btn" 
-                                        data-img-src="../<?php echo htmlspecialchars($violation['proof_image_path']); ?>"
-                                        data-bs-toggle="modal" data-bs-target="#proofModal">
-                                    <i class="fas fa-image me-1"></i> View Proof
-                                </button>
-                            <?php endif; ?>
                         </div>
+
+                        <?php if (!empty($violation['violation_description'])): ?>
+                            <div class="violation-description-box">
+                                <strong><i class="fas fa-info-circle me-1"></i> Details:</strong> 
+                                <?php echo htmlspecialchars($violation['violation_description']); ?>
+                            </div>
+                        <?php endif; ?>
                         
-                        <div class="violation-details">
+                        <div class="violation-details mt-3 pt-3 border-top">
                             <div class="detail-item">
-                                <div class="detail-label">Student</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($violation['student_name']); ?></div>
+                                <div class="detail-label">Student Name</div>
+                                <div class="detail-value text-primary"><?php echo htmlspecialchars($violation['student_name']); ?></div>
                             </div>
                             <div class="detail-item">
                                 <div class="detail-label">Violation Time</div>
-                                <div class="detail-value"><?php echo date('M j, Y g:i A', strtotime($violation['timestamp'])); ?></div>
+                                <div class="detail-value"><?php echo date('M j, Y • g:i A', strtotime($violation['timestamp'])); ?></div>
                             </div>
                             <div class="detail-item">
-                                <div class="detail-label">Exam ID</div>
-                                <div class="detail-value">#<?php echo $violation['exam_id']; ?></div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Student ID</div>
-                                <div class="detail-value">#<?php echo $violation['student_id']; ?></div>
+                                <div class="detail-label">Violation Count</div>
+                                <div class="detail-value">
+                                    <span class="badge bg-danger rounded-pill px-3">
+                                        #<?php echo $violation['violation_count'] ?? 1; ?>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -327,3 +352,4 @@ $stats = mysqli_fetch_assoc($stats_result);
     </script>
 </body>
 </html>
+
