@@ -1781,7 +1781,12 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			const optionItems = document.querySelectorAll('.option-item');
 			const overlay = document.getElementById('fullscreen-overlay');
 			const enterFsBtn = document.getElementById('enter-fullscreen');
-			
+            
+            // Check if user is already in fullscreen (e.g. from previous reload)
+            function isFullscreen() {
+				return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+			}
+
 			// Log exam start immediately on page load (attendance)
 			logExamNotification('exam_started');
 			
@@ -1789,37 +1794,50 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			requestCameraPermission();
 
 			// Show fullscreen overlay until fullscreen is enabled
-			function isFullscreen() {
-				return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-			}
+            // IMPORTANT: If we are already in fullscreen, we might want to just hide it
+            // but usually a fresh load means we need to re-request it to be sure.
+            // However, the camera overlay is z-index 20000, so it sits ON TOP of this.
+            // We should only show this IF camera is already handled OR make it appear after.
+            
 			function requestFullscreen(el) {
 				if (el.requestFullscreen) return el.requestFullscreen();
 				if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
 				if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
 				if (el.msRequestFullscreen) return el.msRequestFullscreen();
+                return Promise.reject("Fullscreen API not supported");
 			}
+            
 			function exitFullscreen() {
 				if (document.exitFullscreen) return document.exitFullscreen();
 				if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
 				if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
 				if (document.msExitFullscreen) return document.msExitFullscreen();
 			}
-			if (fullscreenRequired) {
+
+			if (fullscreenRequired && !isFullscreen()) {
 				overlay.style.display = 'flex';
-			}
+			} else if (fullscreenRequired && isFullscreen()) {
+                fullscreenReady = true;
+                overlay.style.display = 'none';
+            }
+
 			enterFsBtn.addEventListener('click', function() {
 				requestFullscreen(document.documentElement).then(() => {
 					fullscreenReady = true;
 					monitoringEnabled = cameraReady && fullscreenReady;
 					overlay.style.display = 'none';
-				}).catch(() => {
+				}).catch((err) => {
+                    console.error("Fullscreen failed:", err);
 					overlay.style.display = 'flex';
+                    alert("Failed to enter fullscreen. Please try again or use a different browser.");
 				});
 			});
+
 			document.addEventListener('fullscreenchange', function() {
 				if (!isFullscreen()) {
 					fullscreenReady = false;
 					overlay.style.display = 'flex';
+                    // If exam was active, this is a violation!
                     if (monitoringEnabled) {
                         handleTabChange();
                     }
