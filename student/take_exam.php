@@ -336,34 +336,6 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 <p class="mb-0 mt-2">Subject: <?php echo htmlspecialchars($exam['subject']); ?></p>
             </div>
 
-	<!-- Camera permission overlay -->
-	<div id="camera-permission-overlay" class="camera-permission-overlay">
-		<div class="camera-permission-box">
-			<div class="warning-icon"><i class="fas fa-video"></i></div>
-			<h3>Camera Access Required</h3>
-			<p>This exam requires camera access for face monitoring to ensure academic integrity. Your face must be visible throughout the exam.</p>
-			<p><strong>Note:</strong> Refusing camera access or covering your face will result in automatic exam submission.</p>
-			<button id="allow-camera" class="camera-btn"><i class="fas fa-camera"></i> Allow Camera Access</button>
-			<button id="deny-camera" class="camera-btn danger"><i class="fas fa-times"></i> Deny (Submit Exam)</button>
-		</div>
-	</div>
-
-	<!-- Fullscreen overlay -->
-	<div id="fullscreen-overlay" class="fullscreen-overlay">
-		<div class="fullscreen-box">
-			<div class="warning-icon"><i class="fas fa-expand"></i></div>
-			<h3>Enter Fullscreen to Start</h3>
-			<p>For a focused and fair test, this exam requires fullscreen mode. Exiting fullscreen will submit your exam.</p>
-			<button id="enter-fullscreen" class="fullscreen-btn"><i class="fas fa-arrows-alt"></i> Enter Fullscreen</button>
-		</div>
-	</div>
-
-	<!-- Face monitoring widget -->
-	<div id="face-monitor" class="face-monitor" style="display: none;">
-		<video id="camera-video" autoplay muted playsinline></video>
-		<canvas id="face-canvas"></canvas>
-		<div id="face-status" class="face-status">Initializing...</div>
-	</div>
             <div class="timer-container">
                 <i class="fas fa-clock timer-icon"></i>
                 <span id="timer">00:00:00</span>
@@ -471,6 +443,37 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
     <!-- Include Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Global Overlays (Moved outside container to ensure clickability) -->
+    
+    <!-- Camera permission overlay -->
+    <div id="camera-permission-overlay" class="camera-permission-overlay">
+        <div class="camera-permission-box">
+            <div class="warning-icon"><i class="fas fa-video"></i></div>
+            <h3>Camera Access Required</h3>
+            <p>This exam requires camera access for face monitoring to ensure academic integrity. Your face must be visible throughout the exam.</p>
+            <p><strong>Note:</strong> Refusing camera access or covering your face will result in automatic exam submission.</p>
+            <button id="allow-camera" class="camera-btn"><i class="fas fa-camera"></i> Allow Camera Access</button>
+            <button id="deny-camera" class="camera-btn danger"><i class="fas fa-times"></i> Deny (Submit Exam)</button>
+        </div>
+    </div>
+
+    <!-- Fullscreen overlay -->
+    <div id="fullscreen-overlay" class="fullscreen-overlay">
+        <div class="fullscreen-box">
+            <div class="warning-icon"><i class="fas fa-expand"></i></div>
+            <h3>Enter Fullscreen to Start</h3>
+            <p>For a focused and fair test, this exam requires fullscreen mode. Exiting fullscreen will submit your exam.</p>
+            <button id="enter-fullscreen" class="fullscreen-btn"><i class="fas fa-arrows-alt"></i> Enter Fullscreen</button>
+        </div>
+    </div>
+
+    <!-- Face monitoring widget -->
+    <div id="face-monitor" class="face-monitor" style="display: none;">
+        <video id="camera-video" autoplay muted playsinline></video>
+        <canvas id="face-canvas"></canvas>
+        <div id="face-status" class="face-status">Initializing...</div>
+    </div>
+
     <script>
         // Question Navigation Logic
         document.addEventListener('DOMContentLoaded', function() {
