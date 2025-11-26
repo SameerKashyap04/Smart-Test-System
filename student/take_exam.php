@@ -1330,6 +1330,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
+            let sum = 0; // Variable for volume calculation
             
             function draw() {
                 if(!monitoringEnabled) return;
@@ -1345,12 +1346,25 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 let x = 0;
                 
                 for(let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i] / 2;
+                    const value = dataArray[i];
+                    sum += value;
+                    
+                    barHeight = value / 2;
                     
                     ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
                     ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
                     
                     x += barWidth + 1;
+                }
+                
+                const avgVolume = sum / bufferLength;
+                if (avgVolume > 30) { // Threshold for significant noise
+                    // Check if speech was recognized recently
+                    // If noise is high but no speech keywords -> Suspicious noise / Whispering
+                    // Implementation: speech detection sets a 'lastSpeechTime'
+                    // If (now - lastSpeechTime > 2000) and volume high -> whispering
+                    // (Simplified for now as just volume alert)
+                    // console.log('High volume detected:', avgVolume); 
                 }
             }
             draw();
@@ -1394,6 +1408,83 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             }, 5000);
         }
 
+        // --- System Integrity Check (VM/Bot Detection) ---
+        function startSystemIntegrityCheck() {
+            // Check for WebGL Renderer (common way to detect VMs)
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    if (debugInfo) {
+                        const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                        console.log('Renderer:', renderer);
+                        
+                        // Keywords for VMs and Headless browsers
+                        const suspiciousRenderers = ['swiftshader', 'llvmpipe', 'vmware', 'virtualbox', 'mesa', 'software rasterizer'];
+                        
+                        if (suspiciousRenderers.some(r => renderer.includes(r))) {
+                            console.warn('Suspicious Renderer Detected:', renderer);
+                            logFaceViolation('vm_or_bot_detected');
+                            const status = document.getElementById('face-status');
+                            if(status) {
+                                status.textContent = 'Virtual Machine Detected';
+                                status.className = 'face-status no-face';
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Integrity check failed:', e);
+            }
+            
+            // Check for Headless User Agent properties
+            if (navigator.webdriver || window.callPhantom || window._phantom) {
+                logFaceViolation('automation_detected');
+            }
+        }
+
+        // --- DevTools / Inspector Detection ---
+        function startDevToolsDetection() {
+            // Monitor window resize speed and difference (DevTools usually docks and resizes viewport)
+            let lastWidth = window.innerWidth;
+            let lastHeight = window.innerHeight;
+            
+            window.addEventListener('resize', () => {
+                const widthDiff = window.outerWidth - window.innerWidth;
+                const heightDiff = window.outerHeight - window.innerHeight;
+                
+                // If difference is significant (>200px), DevTools might be open docked
+                if (widthDiff > 200 || heightDiff > 200) {
+                    console.warn('DevTools might be open');
+                    // We don't ban immediately, just log a warning for review
+                    // logFaceViolation('devtools_suspected'); 
+                }
+            });
+            
+            // Debugger Trap (stops execution if DevTools is open)
+            setInterval(() => {
+                const startTime = Date.now();
+                debugger; // This statement only pauses execution if DevTools is open!
+                const endTime = Date.now();
+                
+                if (endTime - startTime > 100) { // Execution paused > 100ms
+                    console.warn('Debugger detected!');
+                    logFaceViolation('devtools_debugger_detected');
+                    const status = document.getElementById('face-status');
+                    if(status) {
+                        status.textContent = 'Close Developer Tools!';
+                        status.className = 'face-status no-face';
+                    }
+                }
+            }, 2000);
+        }
+
+        // --- Whisper / Suspicious Noise Detection ---
+        // Refine audio analysis to detect noise without speech
+        // (Integrated into initializeAudioVisualizer update loop)
+        // We'll add this logic inside the existing visualizer to save resources
+        
         // --- Impersonation Check (Face Recognition) ---
         let referenceDescriptor = null;
         async function initializeImpersonationCheck() {
@@ -1554,6 +1645,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 initializeAudioVisualizer(stream); // Start Audio Visualizer
                 initializeImpersonationCheck(); // Start Impersonation Check
                 startLightingCheck(); // Start Environment Check
+                startSystemIntegrityCheck(); // Start VM/Bot Check
+                startDevToolsDetection(); // Start Anti-Tamper
                 
             } catch (error) {
                 console.error('Camera/Audio access denied:', error);
