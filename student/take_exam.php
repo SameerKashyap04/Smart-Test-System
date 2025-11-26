@@ -44,13 +44,19 @@ $questions_sql = "SELECT * FROM questions WHERE exam_id = ?";
 $questions_stmt = mysqli_prepare($conn, $questions_sql);
 mysqli_stmt_bind_param($questions_stmt, "i", $exam_id);
 mysqli_stmt_execute($questions_stmt);
-$questions = mysqli_stmt_get_result($questions_stmt);
+$questions_result = mysqli_stmt_get_result($questions_stmt);
+$total_questions = mysqli_num_rows($questions_result);
 
 // Verify exam has questions
-if (mysqli_num_rows($questions) === 0) {
+if ($total_questions === 0) {
     $_SESSION['error'] = "No questions found for this exam.";
     header("Location: dashboard.php");
     exit();
+}
+
+$questions = [];
+while ($row = mysqli_fetch_assoc($questions_result)) {
+    $questions[] = $row;
 }
 ?>
 <!DOCTYPE html>
@@ -111,6 +117,10 @@ if (mysqli_num_rows($questions) === 0) {
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             margin-bottom: 1.5rem;
             border-left: 4px solid #4e54c8;
+            display: none; /* Hidden by default */
+        }
+        .question-card.active {
+            display: block; /* Show only active question */
         }
         /* Exam top warning banner */
         .exam-warning {
@@ -288,22 +298,31 @@ if (mysqli_num_rows($questions) === 0) {
 			border-radius: 8px;
 			font-weight: 600;
 			margin: 0.5rem;
-+			cursor: pointer;
-+		}
-+		.camera-btn:hover {
-+			background: linear-gradient(135deg, #27ae60, #2ecc71);
-+		}
-+		.camera-btn.danger {
-+			background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-+		}
-+		.camera-btn.danger:hover {
-+			background: linear-gradient(135deg, #c0392b, #e74c3c);
-+		}
+			cursor: pointer;
+		}
+		.camera-btn:hover {
+			background: linear-gradient(135deg, #27ae60, #2ecc71);
+		}
+		.camera-btn.danger {
+			background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+		}
+		.camera-btn.danger:hover {
+			background: linear-gradient(135deg, #c0392b, #e74c3c);
+		}
         
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
+        }
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -365,12 +384,16 @@ if (mysqli_num_rows($questions) === 0) {
             <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
             
             <?php 
-            $question_number = 1;
-            while ($question = mysqli_fetch_assoc($questions)): 
+            $total = count($questions);
+            foreach ($questions as $index => $question): 
+                $q_num = $index + 1;
             ?>
                 <!-- Question card -->
-                <div class="question-card">
-                    <div class="question-number">Question <?php echo $question_number; ?></div>
+                <div class="question-card" id="question-<?php echo $q_num; ?>" data-index="<?php echo $q_num; ?>">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="h5 mb-0">Question <?php echo $q_num; ?> of <?php echo $total; ?></div>
+                        <span class="badge bg-secondary"><?php echo $question['marks']; ?> Marks</span>
+                    </div>
                     <p class="question-text"><?php echo nl2br(htmlspecialchars($question['question_text'])); ?></p>
                     
                     <!-- Display question image if exists -->
@@ -414,14 +437,32 @@ if (mysqli_num_rows($questions) === 0) {
                             </label>
                         </div>
                     </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <?php if ($index > 0): ?>
+                            <button type="button" class="btn btn-secondary nav-btn prev-btn" data-target="<?php echo $q_num - 1; ?>">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                        <?php else: ?>
+                            <div></div> 
+                        <?php endif; ?>
+
+                        <?php if ($index < $total - 1): ?>
+                            <button type="button" class="btn btn-primary nav-btn next-btn" data-target="<?php echo $q_num + 1; ?>">
+                                Next <i class="fas fa-arrow-right"></i>
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-success nav-btn" id="finish-btn">
+                                <i class="fas fa-check"></i> Finish
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
-            <?php 
-            $question_number++;
-            endwhile; 
-            ?>
+            <?php endforeach; ?>
             
-            <!-- Submit button -->
-            <button type="submit" class="submit-btn" id="submit-btn">
+            <!-- Submit button (hidden initially) -->
+            <button type="submit" class="submit-btn d-none" id="submit-btn">
                 <i class="fas fa-paper-plane me-2"></i> Submit Exam
             </button>
         </form>
@@ -431,6 +472,57 @@ if (mysqli_num_rows($questions) === 0) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // Question Navigation Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const questions = document.querySelectorAll('.question-card');
+            const totalQuestions = questions.length;
+            let currentQuestion = 1;
+
+            // Show first question
+            if(questions.length > 0) {
+                questions[0].classList.add('active');
+            }
+
+            // Handle Next Button
+            document.querySelectorAll('.next-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const target = parseInt(this.getAttribute('data-target'));
+                    showQuestion(target);
+                });
+            });
+
+            // Handle Previous Button
+            document.querySelectorAll('.prev-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const target = parseInt(this.getAttribute('data-target'));
+                    showQuestion(target);
+                });
+            });
+
+            // Handle Finish Button
+            const finishBtn = document.getElementById('finish-btn');
+            if(finishBtn) {
+                finishBtn.addEventListener('click', function() {
+                    if(confirm('Are you sure you want to finish and submit the exam?')) {
+                        document.getElementById('submit-btn').click();
+                    }
+                });
+            }
+
+            function showQuestion(num) {
+                // Hide all questions
+                questions.forEach(q => q.classList.remove('active'));
+                
+                // Show target question
+                const targetQuestion = document.getElementById('question-' + num);
+                if(targetQuestion) {
+                    targetQuestion.classList.add('active');
+                    currentQuestion = num;
+                    window.scrollTo(0, 0); // Scroll to top
+                }
+            }
+        });
+
         // Voice Detection Setup
         let voiceDetection;
         // UI removed to prevent student from disabling or changing sensitivity
@@ -1032,6 +1124,10 @@ if (mysqli_num_rows($questions) === 0) {
                     showTabChangeWarning();
                     return;
                 }
+                // Skip confirmation if data-skip-confirm is set
+                if (this.getAttribute('data-skip-confirm') === '1') {
+                    return;
+                }
                 if (!confirm('Are you sure you want to submit your exam? You cannot change your answers after submission.')) {
                     e.preventDefault();
                 }
@@ -1083,4 +1179,4 @@ if (mysqli_num_rows($questions) === 0) {
         });
     </script>
 </body>
-</html> 
+</html>
