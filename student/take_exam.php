@@ -1330,7 +1330,11 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
-            let sum = 0; // Variable for volume calculation
+            
+            // Noise Detection Variables
+            let noiseStartTime = null;
+            const NOISE_THRESHOLD = 40; // Threshold (0-255)
+            const NOISE_DURATION_MS = 2000; // Duration to trigger violation
             
             function draw() {
                 if(!monitoringEnabled) return;
@@ -1344,6 +1348,7 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 const barWidth = (canvas.width / bufferLength) * 2.5;
                 let barHeight;
                 let x = 0;
+                let sum = 0; // Reset sum every frame!
                 
                 for(let i = 0; i < bufferLength; i++) {
                     const value = dataArray[i];
@@ -1351,20 +1356,39 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     
                     barHeight = value / 2;
                     
-                    ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+                    // Visual feedback: Turn red if loud
+                    if (value > NOISE_THRESHOLD * 2) {
+                        ctx.fillStyle = 'rgb(255, 50, 50)';
+                    } else {
+                        ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+                    }
+                    
                     ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
                     
                     x += barWidth + 1;
                 }
                 
                 const avgVolume = sum / bufferLength;
-                if (avgVolume > 30) { // Threshold for significant noise
-                    // Check if speech was recognized recently
-                    // If noise is high but no speech keywords -> Suspicious noise / Whispering
-                    // Implementation: speech detection sets a 'lastSpeechTime'
-                    // If (now - lastSpeechTime > 2000) and volume high -> whispering
-                    // (Simplified for now as just volume alert)
-                    // console.log('High volume detected:', avgVolume); 
+                
+                if (avgVolume > NOISE_THRESHOLD) {
+                    if (!noiseStartTime) {
+                        noiseStartTime = Date.now();
+                    } else if (Date.now() - noiseStartTime > NOISE_DURATION_MS) {
+                        // Sustained noise detected
+                        const status = document.getElementById('face-status');
+                        if (status) {
+                            status.textContent = 'High Background Noise';
+                            status.className = 'face-status no-face';
+                        }
+                        
+                        // Log violation (throttled by logFaceViolation)
+                        logFaceViolation('high_background_noise');
+                        
+                        // Reset timer slightly to avoid spamming every frame, but keep checking
+                        noiseStartTime = Date.now() - (NOISE_DURATION_MS - 1000); 
+                    }
+                } else {
+                    noiseStartTime = null;
                 }
             }
             draw();
