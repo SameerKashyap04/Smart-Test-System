@@ -970,6 +970,72 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 		const VIOLATION_COOLDOWN_MS = 10000; // 10 seconds between same violation type logs
 
 		// Face monitoring functions
+        // --- Face Distance & Mouth Detection ---
+        let baselineFaceWidth = 0;
+        let mouthOpenStartTime = null;
+        
+        function calculateFaceWidth(landmarks) {
+            // Cheek to Cheek distance
+            // Left Cheek: 234, Right Cheek: 454
+            const left = landmarks[234];
+            const right = landmarks[454];
+            return Math.hypot(left.x - right.x, left.y - right.y);
+        }
+        
+        function checkFaceDistance(currentWidth) {
+            if (baselineFaceWidth === 0) {
+                // Initialize baseline (assuming first 5 seconds are correct)
+                if(currentWidth > 0) baselineFaceWidth = currentWidth;
+                return;
+            }
+            
+            // Thresholds (percentage change)
+            const change = (currentWidth - baselineFaceWidth) / baselineFaceWidth;
+            
+            const status = document.getElementById('face-status');
+            
+            if (change > 0.4) { // 40% larger = Too Close
+                if(status) {
+                    status.textContent = 'Too Close to Screen';
+                    status.className = 'face-status no-face';
+                }
+                logFaceViolation('face_too_close');
+            } else if (change < -0.4) { // 40% smaller = Too Far
+                if(status) {
+                    status.textContent = 'Too Far / Leaning Back';
+                    status.className = 'face-status no-face';
+                }
+                logFaceViolation('face_too_far');
+            }
+        }
+        
+        function checkMouthStatus(landmarks) {
+            // Upper Lip Bottom: 13
+            // Lower Lip Top: 14
+            const upper = landmarks[13];
+            const lower = landmarks[14];
+            
+            // Calculate distance relative to face height (to be scale invariant)
+            const faceHeight = Math.hypot(landmarks[10].x - landmarks[152].x, landmarks[10].y - landmarks[152].y);
+            const mouthOpen = Math.hypot(upper.x - lower.x, upper.y - lower.y) / faceHeight;
+            
+            // Threshold for open mouth (experimentally ~0.05)
+            if (mouthOpen > 0.05) {
+                if (!mouthOpenStartTime) mouthOpenStartTime = Date.now();
+                
+                if (Date.now() - mouthOpenStartTime > 2000) { // > 2 seconds open
+                    const status = document.getElementById('face-status');
+                    if(status) {
+                        status.textContent = 'Mouth Open (Talking?)';
+                        status.className = 'face-status no-face';
+                    }
+                    logFaceViolation('mouth_open_talking');
+                }
+            } else {
+                mouthOpenStartTime = null;
+            }
+        }
+
 		function logFaceViolation(violationType) {
             const now = Date.now();
             if (lastViolationLogTime[violationType] && (now - lastViolationLogTime[violationType] < VIOLATION_COOLDOWN_MS)) {
@@ -1039,6 +1105,14 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     
                     // Head Pose Analysis
                     const poseStatus = calculateHeadPose(landmarks);
+                    
+                    // Face Distance Analysis (Z-depth estimation)
+                    const faceWidth = calculateFaceWidth(landmarks);
+                    checkFaceDistance(faceWidth);
+                    
+                    // Mouth Opening Analysis (Talking/Whispering)
+                    checkMouthStatus(landmarks);
+
                     if (poseStatus !== 'center') {
                         if (!eyeOffStartAt) eyeOffStartAt = Date.now();
                         
