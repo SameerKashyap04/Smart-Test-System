@@ -1789,6 +1789,13 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 
 			// Log exam start immediately on page load (attendance)
 			logExamNotification('exam_started');
+            
+            // Start Timer Automatically
+            if (!examStarted) {
+                examStarted = true;
+                updateTimer(); // Show initial time
+                timerInterval = setInterval(updateTimer, 1000);
+            }
 			
 			// Request camera permission first
 			requestCameraPermission();
@@ -1851,13 +1858,6 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             // Add click handlers for options
             optionItems.forEach(item => {
                 item.addEventListener('click', function() {
-                    // Start timer on first interaction
-                    if (!examStarted) {
-                        examStarted = true;
-                        timerInterval = setInterval(updateTimer, 1000);
-                        updateTimer(); // Update immediately
-                    }
-                    
                     // Select the option
                     const radio = this.querySelector('input[type="radio"]');
                     radio.checked = true;
