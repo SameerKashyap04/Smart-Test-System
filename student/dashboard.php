@@ -40,7 +40,7 @@ $completed_exams = mysqli_stmt_get_result($completed_stmt);
 $total_completed = mysqli_num_rows($completed_exams);
 
 // Calculate average score
-$avg_sql = "SELECT AVG((score/total_marks)*100) as avg_score FROM exam_results er JOIN exams e ON er.exam_id = e.id WHERE student_id = ?";
+$avg_sql = "SELECT AVG((er.score/e.total_marks)*100) as avg_score FROM exam_results er JOIN exams e ON er.exam_id = e.id WHERE student_id = ?";
 $avg_stmt = mysqli_prepare($conn, $avg_sql);
 mysqli_stmt_bind_param($avg_stmt, "i", $_SESSION['user_id']);
 mysqli_stmt_execute($avg_stmt);
