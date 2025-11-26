@@ -54,13 +54,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     
                 } catch (Exception $e) {
                     // If mail fails, we still allow them to verify (e.g. via DB lookup for localhost)
-                    $_SESSION['error'] = "Registration successful but failed to send email. Please contact support or check database for OTP.";
+                    if (!$is_production) {
+                         $_SESSION['success'] = "Registration successful! (Dev Mode: OTP is $otp)";
+                         $_SESSION['verify_email'] = $email;
+                         header("Location: verify_email.php");
+                         exit();
+                    }
+                    $_SESSION['error'] = "Registration successful but failed to send email. Please contact support.";
                     $_SESSION['verify_email'] = $email;
                     header("Location: verify_email.php"); 
                     exit();
                 }
             } else {
                  // Mailer not configured properly, but user registered
+                 if (!$is_production) {
+                    $_SESSION['success'] = "Registration successful! (Dev Mode: OTP is $otp)";
+                    $_SESSION['verify_email'] = $email;
+                    header("Location: verify_email.php");
+                    exit();
+                 }
                  $_SESSION['error'] = "Mailer configuration error. Check server logs.";
                  $_SESSION['verify_email'] = $email;
                  header("Location: verify_email.php");

@@ -87,6 +87,7 @@ if(isset($_SESSION['user_id'])) {
 
                 <div class="text-center">
                     <p class="text-muted mb-0">Don't have an account? <a href="auth/register.php" class="text-primary fw-bold">Sign Up</a></p>
+                    <p class="text-muted mb-0 mt-2"><a href="auth/forgot_password.php" class="text-muted small">Forgot Password?</a></p>
                 </div>
             </form>
         </div>
