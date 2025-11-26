@@ -1319,24 +1319,41 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
         // --- Audio Visualizer ---
         function initializeAudioVisualizer(stream) {
             const canvas = document.getElementById('audio-visualizer');
-            if(!canvas) return;
-            
-            // Fix canvas resolution
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            
-            const ctx = canvas.getContext('2d');
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // Resume context if suspended (browser policy)
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
+            if(!canvas) {
+                console.error("Audio visualizer canvas not found!");
+                return;
             }
             
+            console.log("Initializing Audio Visualizer...");
+            
+            // Check if stream has audio
+            if (stream.getAudioTracks().length === 0) {
+                console.warn("No audio tracks found in stream!");
+                // Force audio track constraint if possible or alert
+                return;
+            }
+
+            // Set canvas size explicitly
+            canvas.width = 200; // Match container width
+            canvas.height = 50;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Create AudioContext
+            let audioContext;
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch(e) {
+                console.error("Web Audio API not supported", e);
+                return;
+            }
+
+            // Create Source
             const source = audioContext.createMediaStreamSource(stream);
             const analyser = audioContext.createAnalyser();
             
-            analyser.fftSize = 64; // Increased slightly for better resolution
+            analyser.fftSize = 64;
+            analyser.smoothingTimeConstant = 0.8;
             source.connect(analyser);
             
             const bufferLength = analyser.frequencyBinCount;
@@ -1344,37 +1361,44 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             
             // Noise Detection Variables
             let noiseStartTime = null;
-            const NOISE_THRESHOLD = 40; // Threshold (0-255)
-            const NOISE_DURATION_MS = 2000; // Duration to trigger violation
+            const NOISE_THRESHOLD = 40; 
+            const NOISE_DURATION_MS = 2000;
             
             function draw() {
-                if(!monitoringEnabled) return;
+                if(!monitoringEnabled) {
+                    requestAnimationFrame(draw); // Keep loop running but don't draw/process
+                    return;
+                }
                 requestAnimationFrame(draw);
                 
+                // Ensure context is running
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
                 analyser.getByteFrequencyData(dataArray);
                 
-                // Dark gray background to show it's active
+                // Clear with dark background
                 ctx.fillStyle = '#222'; 
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                const barWidth = (canvas.width / bufferLength) * 2.5;
+                const barWidth = (canvas.width / bufferLength) * 2;
                 let barHeight;
                 let x = 0;
-                let sum = 0; // Reset sum every frame!
+                let sum = 0;
                 
                 for(let i = 0; i < bufferLength; i++) {
                     const value = dataArray[i];
                     sum += value;
                     
-                    // Scale bar height to fit canvas
+                    // Scale bar height
                     barHeight = (value / 255) * canvas.height;
                     
-                    // Visual feedback: Turn red if loud
+                    // Color based on volume
                     if (value > NOISE_THRESHOLD * 2) {
-                        ctx.fillStyle = 'rgb(255, 50, 50)';
+                        ctx.fillStyle = '#ff4444'; // Red for loud
                     } else {
-                        // Gradient-like color
-                        ctx.fillStyle = 'rgb(' + (value + 100) + ',50,200)';
+                        ctx.fillStyle = '#4e54c8'; // Brand color for normal
                     }
                     
                     ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
@@ -1382,30 +1406,27 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                     x += barWidth + 1;
                 }
                 
+                // Noise detection logic
                 const avgVolume = sum / bufferLength;
-                
                 if (avgVolume > NOISE_THRESHOLD) {
                     if (!noiseStartTime) {
                         noiseStartTime = Date.now();
                     } else if (Date.now() - noiseStartTime > NOISE_DURATION_MS) {
-                        // Sustained noise detected
                         const status = document.getElementById('face-status');
                         if (status) {
                             status.textContent = 'High Background Noise';
                             status.className = 'face-status no-face';
                         }
-                        
-                        // Log violation (throttled by logFaceViolation)
                         logFaceViolation('high_background_noise');
-                        
-                        // Reset timer slightly to avoid spamming every frame, but keep checking
                         noiseStartTime = Date.now() - (NOISE_DURATION_MS - 1000); 
                     }
                 } else {
                     noiseStartTime = null;
                 }
             }
+            
             draw();
+            console.log("Audio Visualizer Started");
         }
 
         // --- Lighting / Environment Check ---
