@@ -1285,7 +1285,10 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 
                 predictions.forEach(prediction => {
                     const class_name = prediction.class.toLowerCase();
-                    if ((class_name === 'cell phone' || class_name === 'book' || class_name === 'laptop') && prediction.score > 0.6) {
+                    // Auto-submit triggers
+                    const prohibitedItems = ['cell phone', 'book', 'laptop'];
+                    
+                    if (prohibitedItems.includes(class_name) && prediction.score > 0.6) {
                         console.log('Prohibited Object Detected:', class_name);
                         
                         const status = document.getElementById('face-status');
@@ -1294,7 +1297,18 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                             status.className = 'face-status no-face';
                         }
                         
-                        logFaceViolation('prohibited_object_' + class_name.replace(' ', '_'));
+                        // Log the violation with a specific flag to indicate severity
+                        logFaceViolation('prohibited_object_' + class_name.replace(' ', '_'), 
+                            `Serious Violation: ${class_name} detected. Exam auto-submitted.`);
+                        
+                        // Trigger auto-submit lock
+                        lockExam(`Prohibited object (${class_name}) detected! Your exam is being submitted automatically.`);
+                        
+                        // Force submit after a short delay to ensure violation is logged
+                        setTimeout(() => {
+                            document.getElementById('exam-form').setAttribute('data-skip-confirm', '1');
+                            document.getElementById('exam-form').submit();
+                        }, 2000);
                     }
                 });
             } catch (e) {
