@@ -1126,11 +1126,19 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 			const permissionOverlay = document.getElementById('camera-permission-overlay');
 			const allowBtn = document.getElementById('allow-camera');
 			const denyBtn = document.getElementById('deny-camera');
+            const faceStatus = document.getElementById('face-status');
 			
 			permissionOverlay.style.display = 'flex';
 			
 			allowBtn.addEventListener('click', async () => {
+                allowBtn.disabled = true;
+                allowBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Requesting...';
+                
 				try {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('Camera API not supported. Please use HTTPS and a modern browser (Chrome/Safari).');
+                    }
+
 					const stream = await navigator.mediaDevices.getUserMedia({ 
 						video: { 
 							width: 200, 
@@ -1146,16 +1154,24 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 					initializeFaceDetection();
 				} catch (error) {
 					console.error('Camera access denied:', error);
-					document.getElementById('face-status').textContent = 'Camera Denied';
-					document.getElementById('face-status').className = 'face-status camera-denied';
+                    alert('Camera Error: ' + error.message);
+					faceStatus.textContent = 'Camera Denied';
+					faceStatus.className = 'face-status camera-denied';
 					logFaceViolation('camera_access_denied');
-					handleTabChange();
+					
+                    // Reset button state
+                    allowBtn.disabled = false;
+                    allowBtn.innerHTML = '<i class="fas fa-camera"></i> Allow Camera Access';
+                    
+                    // Don't auto-lock immediately on first fail, allow retry
 				}
 			});
 			
 			denyBtn.addEventListener('click', () => {
-				logFaceViolation('camera_access_denied');
-				handleTabChange();
+                if(confirm('Are you sure? Refusing camera access will submit your exam.')) {
+				    logFaceViolation('camera_access_denied');
+				    handleTabChange(); // This locks/submits
+                }
 			});
 		}
         
