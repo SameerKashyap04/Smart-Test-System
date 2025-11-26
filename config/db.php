@@ -19,11 +19,11 @@ if ($is_production) {
     
     try {
         $conn = mysqli_connect($host, $username, $password, $database, $port);
-    } catch (Exception $e) {
+    } catch (mysqli_sql_exception $e) {
         die("<h1>Database Connection Failed</h1>
-             <p><strong>Raw Error:</strong> " . $e->getMessage() . "</p>
-             <p><strong>User:</strong> $username</p>
-             <p><strong>Host:</strong> $host</p>");
+             <p><strong>Error:</strong> Access Denied.</p>
+             <p><strong>Details:</strong> The password in <code>config/db.php</code> does not match the Database Password in Hostinger.</p>
+             <p>Please go to Hostinger -> Databases -> Change Password and set it to: <code>SmartTest@2025</code></p>");
     }
 } else {
     // LOCALHOST / XAMPP SETUP
