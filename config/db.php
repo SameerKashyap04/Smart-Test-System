@@ -7,7 +7,7 @@
 // 3. Update the variables below:
 
 // Auto-detect environment
-$is_production = (strpos($_SERVER['HTTP_HOST'] ?? '', 'devify.live') !== false);
+$is_production = (strpos($_SERVER['HTTP_HOST'] ?? '', 'devify.live') !== false) || (strpos(__DIR__, '/home/u414525231') !== false);
 
 if ($is_production) {
     // HOSTINGER Credentials
