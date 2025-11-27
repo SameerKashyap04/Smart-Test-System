@@ -132,11 +132,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-3" id="roll-no-container">
                     <label class="form-label text-muted small fw-bold">ROLL NUMBER</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-id-card text-primary"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0" name="roll_no" placeholder="Enter your roll no (e.g. 123456)" required>
+                        <input type="text" class="form-control border-start-0 ps-0" name="roll_no" id="roll_no" placeholder="Enter your roll no (e.g. 123456)" required>
                     </div>
                 </div>
 
@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="mb-4">
                     <label class="form-label text-muted small fw-bold">ROLE</label>
-                    <select class="form-select" name="role" required>
+                    <select class="form-select" name="role" id="role" required>
                         <option value="">Select Role</option>
                         <option value="student">Student</option>
                         <option value="examiner">Examiner</option>
@@ -261,6 +261,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 strengthText.className = 'text-success';
             }
         });
+
+        // Role-based Field Toggling
+        const roleSelect = document.getElementById('role');
+        const rollNoContainer = document.getElementById('roll-no-container');
+        const rollNoInput = document.getElementById('roll_no');
+
+        function toggleFields() {
+            const role = roleSelect.value;
+            if (role === 'student') {
+                rollNoContainer.style.display = 'block';
+                rollNoInput.required = true;
+            } else {
+                rollNoContainer.style.display = 'none';
+                rollNoInput.required = false;
+                rollNoInput.value = ''; // Clear input if hidden
+            }
+        }
+
+        roleSelect.addEventListener('change', toggleFields);
+        
+        // Initialize on page load
+        toggleFields();
     </script>
 </body>
 </html>
