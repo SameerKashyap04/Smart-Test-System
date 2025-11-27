@@ -1383,18 +1383,21 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                 // Keywords to flag
                 const suspiciousWords = ['hey google', 'alexa', 'siri', 'answer', 'what is', 'help', 'copy', 'paste', 'chatgpt'];
                 
-                const detectedWord = suspiciousWords.find(word => transcript.includes(word));
+            const detectedWord = suspiciousWords.find(word => transcript.includes(word));
+            
+            if (detectedWord) {
+                console.warn("Suspicious speech detected:", detectedWord);
+                logFaceViolation('suspicious_speech_' + detectedWord.replace(' ', '_'));
                 
-                if (detectedWord) {
-                    console.warn("Suspicious speech detected:", detectedWord);
-                    logFaceViolation('suspicious_speech_' + detectedWord.replace(' ', '_'));
-                    
-                    const status = document.getElementById('face-status');
-                    if (status) {
-                        status.textContent = 'Speech: ' + detectedWord;
-                        status.className = 'face-status no-face';
-                    }
+                const status = document.getElementById('face-status');
+                if (status) {
+                    status.textContent = 'Speech: ' + detectedWord;
+                    status.className = 'face-status no-face';
                 }
+                
+                // Freeze exam for speech violation
+                freezeExam(30, `Suspicious speech detected ("${detectedWord}")! The exam is paused for 30 seconds.`);
+            }
             };
 
             recognition.onerror = function(event) {
@@ -1461,8 +1464,8 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             
             // Noise Detection Variables
             let noiseStartTime = null;
-            const NOISE_THRESHOLD = 40; 
-            const NOISE_DURATION_MS = 2000;
+            const NOISE_THRESHOLD = 30; // Lower threshold to be more sensitive (was 40)
+            const NOISE_DURATION_MS = 1500; // Faster trigger (was 2000ms)
             
             function draw() {
                 if(!monitoringEnabled) {
@@ -1517,7 +1520,11 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
                             status.textContent = 'High Background Noise';
                             status.className = 'face-status no-face';
                         }
-                        logFaceViolation('high_background_noise');
+                        logFaceViolation('high_background_noise', 'Warning: High background noise detected. Silence required.');
+                        
+                        // Freeze exam for 30 seconds instead of just logging
+                        freezeExam(30, 'High noise levels detected! The exam is paused for 30 seconds. Please maintain silence.');
+                        
                         noiseStartTime = Date.now() - (NOISE_DURATION_MS - 1000); 
                     }
                 } else {
