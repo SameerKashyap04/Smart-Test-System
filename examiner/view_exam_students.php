@@ -30,7 +30,7 @@ if (!$exam) {
 }
 
 // Fetch students who submitted the exam with their scores and submission time
-$students_sql = "SELECT er.student_id, er.score, er.total_marks, er.completed_at, u.username 
+$students_sql = "SELECT er.student_id, er.score, er.total_marks, er.completed_at, u.username, u.roll_no, u.college, u.branch 
                  FROM exam_results er 
                  JOIN users u ON er.student_id = u.id 
                  WHERE er.exam_id = ? 
@@ -50,6 +50,11 @@ $students = mysqli_stmt_get_result($students_stmt);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
@@ -93,8 +98,9 @@ $students = mysqli_stmt_get_result($students_stmt);
                 <div class="small">Subject: <?php echo htmlspecialchars($exam['subject']); ?> • Total Marks: <?php echo (int)$exam['total_marks']; ?></div>
             </div>
             <div class="d-flex gap-2">
+                <button class="btn btn-success text-white" onclick="exportToExcel()"><i class="fas fa-file-excel me-1"></i> Excel</button>
+                <button class="btn btn-danger text-white" onclick="exportToPDF()"><i class="fas fa-file-pdf me-1"></i> PDF</button>
                 <a href="dashboard.php" class="btn btn-light"><i class="fas fa-arrow-left me-1"></i> Back</a>
-                <a href="notifications.php" class="btn btn-warning text-white"><i class="fas fa-bell me-1"></i> Notifications</a>
             </div>
         </div>
 
@@ -113,15 +119,21 @@ $students = mysqli_stmt_get_result($students_stmt);
                                 <tr>
                                     <th>#</th>
                                     <th>Student</th>
+                                    <th>Roll No</th>
+                                    <th>College</th>
+                                    <th>Branch</th>
                                     <th>Score</th>
                                     <th>Submitted At</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="studentsTableBody">
                                 <?php $i = 1; while ($row = mysqli_fetch_assoc($students)): ?>
                                     <tr>
                                         <td><?php echo $i++; ?></td>
                                         <td><?php echo htmlspecialchars($row['username']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['roll_no'] ?: 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($row['college'] ?: 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($row['branch'] ?: 'N/A'); ?></td>
                                         <td>
                                             <span class="badge badge-score text-white">
                                                 <?php echo (int)$row['score']; ?>/<?php echo (int)$row['total_marks']; ?>
@@ -139,6 +151,31 @@ $students = mysqli_stmt_get_result($students_stmt);
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function exportToExcel() {
+            const table = document.querySelector(".table");
+            const wb = XLSX.utils.table_to_book(table, {sheet: "Sheet1"});
+            XLSX.writeFile(wb, "Exam_Results_<?php echo preg_replace('/[^a-zA-Z0-9]/', '_', $exam['title']); ?>.xlsx");
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.text("Exam Results: <?php echo addslashes($exam['title']); ?>", 14, 15);
+            doc.setFontSize(10);
+            doc.text("Generated on: " + new Date().toLocaleString(), 14, 22);
+
+            doc.autoTable({ 
+                html: '.table',
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [78, 84, 200] }
+            });
+
+            doc.save("Exam_Results_<?php echo preg_replace('/[^a-zA-Z0-9]/', '_', $exam['title']); ?>.pdf");
+        }
+    </script>
 </body>
 </html>
 
