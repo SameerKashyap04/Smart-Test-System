@@ -5,6 +5,7 @@ require_once '../config/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $roll_no = isset($_POST['roll_no']) ? mysqli_real_escape_string($conn, $_POST['roll_no']) : '';
     $password = $_POST['password'];
     $role = mysqli_real_escape_string($conn, $_POST['role']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
@@ -29,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         
         // Insert user with is_verified = 0
-        $sql = "INSERT INTO users (username, password, role, email, college, branch, is_verified, otp_code, otp_expiry) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)";
+        $sql = "INSERT INTO users (username, roll_no, password, role, email, college, branch, is_verified, otp_code, otp_expiry) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "ssssssss", $username, $hashed_password, $role, $email, $college, $branch, $otp, $otp_expiry);
+        mysqli_stmt_bind_param($stmt, "sssssssss", $username, $roll_no, $hashed_password, $role, $email, $college, $branch, $otp, $otp_expiry);
         
         if (mysqli_stmt_execute($stmt)) {
             // Send OTP via Email
@@ -128,6 +129,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-user text-primary"></i></span>
                         <input type="text" class="form-control border-start-0 ps-0" name="username" placeholder="Choose a username" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">ROLL NUMBER</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-id-card text-primary"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="roll_no" placeholder="Enter your roll no (e.g. 123456)" required>
                     </div>
                 </div>
 

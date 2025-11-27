@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['role'] = $row['role'];
             $_SESSION['college'] = $row['college'] ?? '';
             $_SESSION['branch'] = $row['branch'] ?? '';
+            $_SESSION['roll_no'] = $row['roll_no'] ?? '';
 
             // Redirect based on user role
             if ($role == 'student') {
