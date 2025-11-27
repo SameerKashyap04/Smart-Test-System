@@ -46,6 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // 3. Exam Results
                 mysqli_query($conn, "DELETE FROM exam_results WHERE student_id = $user_id");
+
+                // 4. Student Answers
+                mysqli_query($conn, "DELETE FROM student_answers WHERE student_id = $user_id");
                 
             } else if ($role === 'examiner') {
                 // Delete Examiner Data (More complex, deletes exams and questions)
@@ -64,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     mysqli_query($conn, "DELETE FROM exam_notifications WHERE exam_id IN ($ids_str)");
                     mysqli_query($conn, "DELETE FROM exam_violations WHERE exam_id IN ($ids_str)");
                     mysqli_query($conn, "DELETE FROM exam_results WHERE exam_id IN ($ids_str)");
+                    mysqli_query($conn, "DELETE FROM student_answers WHERE exam_id IN ($ids_str)");
                     
                     // Delete Questions
                     mysqli_query($conn, "DELETE FROM questions WHERE exam_id IN ($ids_str)");
