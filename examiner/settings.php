@@ -7,7 +7,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'examiner') {
 	exit();
 }
 
-@mysqli_query($conn, "ALTER TABLE users ADD COLUMN id_document_path VARCHAR(255) NULL");
+    // Check if column exists before trying to add it
+    $result = mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'id_document_path'");
+    if (mysqli_num_rows($result) == 0) {
+        mysqli_query($conn, "ALTER TABLE users ADD COLUMN id_document_path VARCHAR(255) NULL");
+    }
 
 $success = null;
 $error = null;
