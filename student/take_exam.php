@@ -866,6 +866,48 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
             timeLeft--;
         }
         
+        // Freeze overlay to pause exam temporarily
+        function freezeExam(durationSeconds, reason) {
+            const existing = document.getElementById('exam-freeze-overlay');
+            if (existing) return; // Already frozen
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'exam-freeze-overlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10003;display:flex;align-items:center;justify-content:center;color:#fff;padding:16px;text-align:center;';
+            
+            let remaining = durationSeconds;
+            
+            overlay.innerHTML = `
+                <div style="max-width:560px;background:#111827;border-radius:12px;padding:24px;border: 2px solid #f59e0b;">
+                    <div class="warning-icon" style="color:#f59e0b;font-size:3rem;margin-bottom:1rem;"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h3 style="margin-bottom:1rem;font-size:1.5rem;">Exam Paused</h3>
+                    <p style="margin-bottom:1.5rem;color:#d1d5db;">${reason}</p>
+                    <div style="font-size:2rem;font-weight:bold;color:#f59e0b;margin-bottom:1rem;">
+                        Resuming in <span id="freeze-timer">${remaining}</span>s
+                    </div>
+                    <p style="font-size:0.875rem;color:#9ca3af;">Please correct the violation immediately.</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            
+            // Disable inputs
+            const inputs = document.querySelectorAll('input, button, select, textarea');
+            inputs.forEach(el => el.disabled = true);
+            
+            const interval = setInterval(() => {
+                remaining--;
+                const timerEl = document.getElementById('freeze-timer');
+                if(timerEl) timerEl.textContent = remaining;
+                
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    document.body.removeChild(overlay);
+                    // Re-enable inputs
+                    inputs.forEach(el => el.disabled = false);
+                }
+            }, 1000);
+        }
+
         // Lock overlay to block exam until submission
         function lockExam(reason) {
             const existing = document.getElementById('exam-lock-overlay');
@@ -1135,15 +1177,10 @@ while ($row = mysqli_fetch_assoc($questions_result)) {
 					if (results.multiFaceLandmarks.length > 1) {
 						const now = Date.now();
 						if (now - lastProctorAlertAt > PROCTOR_ALERT_COOLDOWN_MS) {
-							logFaceViolation('multiple_faces_detected', 'Serious Violation: Multiple people detected. Exam auto-submitted.');
+							logFaceViolation('multiple_faces_detected', 'Serious Violation: Multiple people detected.');
 							
-                            lockExam('Multiple people detected in camera view! Your exam is being submitted automatically.');
-                            
-                            // Force submit after delay
-                            setTimeout(() => {
-                                document.getElementById('exam-form').setAttribute('data-skip-confirm', '1');
-                                document.getElementById('exam-form').submit();
-                            }, 2000);
+                            // Warning and 30s freeze instead of auto-submit
+                            freezeExam(30, 'Multiple people detected in camera view! The exam is paused for 30 seconds. Please ensure you are alone.');
 
 							lastProctorAlertAt = now;
 						}
