@@ -17,6 +17,12 @@ if (!isset($_GET['exam_id'])) {
 
 $exam_id = (int)$_GET['exam_id'];
 
+// Verify exam secret key session flag
+if (!isset($_SESSION['exam_unlocked_' . $exam_id]) || $_SESSION['exam_unlocked_' . $exam_id] !== true) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 // Check if student has already taken this exam
 $check_sql = "SELECT * FROM exam_results WHERE exam_id = ? AND student_id = ?";
 $check_stmt = mysqli_prepare($conn, $check_sql);

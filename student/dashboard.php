@@ -13,6 +13,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 // Fetch available exams
+// Filter by College (Exact match) and Branch (Exact match OR 'All')
 $sql = "SELECT e.*, u.username as examiner_name 
         FROM exams e 
         JOIN users u ON e.examiner_id = u.id 
@@ -20,9 +21,12 @@ $sql = "SELECT e.*, u.username as examiner_name
             SELECT exam_id 
             FROM exam_results 
             WHERE student_id = ?
-        ) ORDER BY e.created_at DESC";
+        )
+        AND e.college = ? 
+        AND (e.branch = 'All' OR e.branch = ?)
+        ORDER BY e.created_at DESC";
 $stmt = mysqli_prepare($conn, $sql);
-mysqli_stmt_bind_param($stmt, "i", $_SESSION['user_id']);
+mysqli_stmt_bind_param($stmt, "iss", $_SESSION['user_id'], $_SESSION['college'], $_SESSION['branch']);
 mysqli_stmt_execute($stmt);
 $exams = mysqli_stmt_get_result($stmt);
 $total_available = mysqli_num_rows($exams);
@@ -192,9 +196,11 @@ $average_score = round($avg_result['avg_score'] ?? 0, 1);
                                                 <span><i class="far fa-star me-1"></i> <?php echo $exam['total_marks']; ?> pts</span>
                                             </div>
                                             <div class="exam-footer">
-                                                <a href="take_exam.php?exam_id=<?php echo $exam['id']; ?>" class="btn btn-primary w-100">
+                                                <button class="btn btn-primary w-100 start-exam-btn" 
+                                                        data-exam-id="<?php echo $exam['id']; ?>" 
+                                                        data-exam-title="<?php echo htmlspecialchars($exam['title']); ?>">
                                                     <i class="fas fa-pen me-2"></i> Start Exam
-                                                </a>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -257,12 +263,112 @@ $average_score = round($avg_result['avg_score'] ?? 0, 1);
         </main>
     </div>
 
+    <!-- Secret Key Modal -->
+    <div class="modal fade" id="secretKeyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Enter Exam Secret Key</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Please enter the secret key provided by your examiner to start <strong id="modalExamTitle"></strong>.</p>
+                    <form id="secretKeyForm">
+                        <input type="hidden" id="modalExamId" name="exam_id">
+                        <div class="mb-3">
+                            <label for="secretKeyInput" class="form-label">Secret Key</label>
+                            <input type="text" class="form-control" id="secretKeyInput" required autocomplete="off">
+                            <div class="invalid-feedback" id="keyError"></div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="verifyKeyBtn">
+                                <span class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true"></span>
+                                Verify & Start Exam
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/theme.js"></script>
     <script>
         // Mobile Sidebar Toggle
         document.getElementById('sidebarToggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        // Secret Key Modal Logic
+        const secretKeyModal = new bootstrap.Modal(document.getElementById('secretKeyModal'));
+        const secretKeyForm = document.getElementById('secretKeyForm');
+        const secretKeyInput = document.getElementById('secretKeyInput');
+        const modalExamId = document.getElementById('modalExamId');
+        const modalExamTitle = document.getElementById('modalExamTitle');
+        const keyError = document.getElementById('keyError');
+        const verifyKeyBtn = document.getElementById('verifyKeyBtn');
+        const spinner = verifyKeyBtn.querySelector('.spinner-border');
+
+        document.querySelectorAll('.start-exam-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const examId = this.getAttribute('data-exam-id');
+                const examTitle = this.getAttribute('data-exam-title');
+                
+                modalExamId.value = examId;
+                modalExamTitle.textContent = examTitle;
+                secretKeyInput.value = '';
+                secretKeyInput.classList.remove('is-invalid');
+                
+                secretKeyModal.show();
+            });
+        });
+
+        secretKeyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const examId = modalExamId.value;
+            const key = secretKeyInput.value.trim();
+            
+            if (!key) {
+                secretKeyInput.classList.add('is-invalid');
+                keyError.textContent = 'Please enter the secret key.';
+                return;
+            }
+
+            // Show loading state
+            verifyKeyBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            secretKeyInput.classList.remove('is-invalid');
+
+            fetch('verify_exam_key.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    exam_id: examId,
+                    secret_key: key
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'take_exam.php?exam_id=' + examId;
+                } else {
+                    secretKeyInput.classList.add('is-invalid');
+                    keyError.textContent = data.message || 'Invalid secret key.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                secretKeyInput.classList.add('is-invalid');
+                keyError.textContent = 'An error occurred. Please try again.';
+            })
+            .finally(() => {
+                verifyKeyBtn.disabled = false;
+                spinner.classList.add('d-none');
+            });
         });
     </script>
 </body>

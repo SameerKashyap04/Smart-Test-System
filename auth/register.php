@@ -8,6 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
     $role = mysqli_real_escape_string($conn, $_POST['role']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $college = mysqli_real_escape_string($conn, $_POST['college']);
+    $branch = mysqli_real_escape_string($conn, $_POST['branch']);
 
     // Check if username or email already exists
     $check_sql = "SELECT * FROM users WHERE username = ? OR email = ?";
@@ -27,9 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         
         // Insert user with is_verified = 0
-        $sql = "INSERT INTO users (username, password, role, email, is_verified, otp_code, otp_expiry) VALUES (?, ?, ?, ?, 0, ?, ?)";
+        $sql = "INSERT INTO users (username, password, role, email, college, branch, is_verified, otp_code, otp_expiry) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "ssssss", $username, $hashed_password, $role, $email, $otp, $otp_expiry);
+        mysqli_stmt_bind_param($stmt, "ssssssss", $username, $hashed_password, $role, $email, $college, $branch, $otp, $otp_expiry);
         
         if (mysqli_stmt_execute($stmt)) {
             // Send OTP via Email
@@ -134,6 +136,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-envelope text-primary"></i></span>
                         <input type="email" class="form-control border-start-0 ps-0" name="email" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">COLLEGE NAME</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-university text-primary"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="college" placeholder="e.g. XYZ College of Engineering" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">BRANCH / DEPARTMENT</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-code-branch text-primary"></i></span>
+                        <select class="form-select border-start-0 ps-0" name="branch" required>
+                            <option value="">Select Branch</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics & Communication">Electronics & Communication</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Civil Engineering">Civil Engineering</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
                 </div>
 

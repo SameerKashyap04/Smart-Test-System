@@ -45,6 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $duration = (int)$_POST['duration'];
     $total_marks = (int)$_POST['total_marks'];
     $max_tab_changes = isset($_POST['max_tab_changes']) ? (int)$_POST['max_tab_changes'] : 3;
+    $college = $_SESSION['college']; // Auto-fill from session
+    $branch = isset($_POST['branch']) ? $_POST['branch'] : 'All';
+    $secret_key = trim($_POST['secret_key']);
     
     // Voice detection settings
     $voice_detection_enabled = isset($_POST['voice_detection_enabled']) ? 1 : 0;
@@ -62,14 +65,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Duration must be greater than 0";
     } elseif ($total_marks <= 0) {
         $error = "Total marks must be greater than 0";
+    } elseif (empty($secret_key)) {
+        $error = "Secret key is required for exam security";
     } elseif ($max_tab_changes < 0) {
         $error = "Maximum tab changes cannot be negative";
     } else {
         // Insert exam into database
-        $sql = "INSERT INTO exams (examiner_id, title, description, subject, duration, total_marks, max_tab_changes, voice_detection_enabled, microphone_required, voice_sensitivity, voice_violation_threshold, voice_max_violations) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO exams (examiner_id, title, description, subject, duration, total_marks, max_tab_changes, college, branch, secret_key, voice_detection_enabled, microphone_required, voice_sensitivity, voice_violation_threshold, voice_max_violations) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "isssiiiiiiii", $_SESSION['user_id'], $title, $description, $subject, $duration, $total_marks, $max_tab_changes, $voice_detection_enabled, $microphone_required, $voice_sensitivity, $voice_violation_threshold, $voice_max_violations);
+        mysqli_stmt_bind_param($stmt, "isssiiisssiidii", $_SESSION['user_id'], $title, $description, $subject, $duration, $total_marks, $max_tab_changes, $college, $branch, $secret_key, $voice_detection_enabled, $microphone_required, $voice_sensitivity, $voice_violation_threshold, $voice_max_violations);
         
         if (mysqli_stmt_execute($stmt)) {
             $exam_id = mysqli_insert_id($conn);
@@ -177,6 +182,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label for="subject" class="form-label">Subject</label>
                         <input type="text" class="form-control" id="subject" name="subject" required 
                                value="<?php echo isset($_POST['subject']) ? htmlspecialchars($_POST['subject']) : ''; ?>">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="branch" class="form-label">Target Branch</label>
+                        <select class="form-select" id="branch" name="branch" required>
+                            <option value="All" <?php echo (isset($_POST['branch']) && $_POST['branch'] === 'All') ? 'selected' : ''; ?>>All Branches</option>
+                            <option value="Computer Science" <?php echo (isset($_POST['branch']) && $_POST['branch'] === 'Computer Science') ? 'selected' : ''; ?>>Computer Science</option>
+                            <option value="Information Technology" <?php echo (isset($_POST['branch']) && $_POST['branch'] === 'Information Technology') ? 'selected' : ''; ?>>Information Technology</option>
+                            <option value="Electronics & Communication" <?php echo (isset($_POST['branch']) && $_POST['branch'] === 'Electronics & Communication') ? 'selected' : ''; ?>>Electronics & Communication</option>
+                            <option value="Mechanical Engineering" <?php echo (isset($_POST['branch']) && $_POST['branch'] === 'Mechanical Engineering') ? 'selected' : ''; ?>>Mechanical Engineering</option>
+                            <option value="Civil Engineering" <?php echo (isset($_POST['branch']) && $_POST['branch'] === 'Civil Engineering') ? 'selected' : ''; ?>>Civil Engineering</option>
+                            <option value="Electrical Engineering" <?php echo (isset($_POST['branch']) && $_POST['branch'] === 'Electrical Engineering') ? 'selected' : ''; ?>>Electrical Engineering</option>
+                        </select>
+                        <small class="text-muted">Exam will be visible to students of this branch in your college.</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="secret_key" class="form-label">Secret Key (Exam Password)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input type="text" class="form-control" id="secret_key" name="secret_key" required 
+                                   placeholder="e.g. EXAM123"
+                                   value="<?php echo isset($_POST['secret_key']) ? htmlspecialchars($_POST['secret_key']) : ''; ?>">
+                        </div>
+                        <small class="text-muted">Students must enter this key to start the exam.</small>
                     </div>
                 </div>
                 
