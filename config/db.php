@@ -22,7 +22,7 @@ if (!defined('SYSTEM_LICENSE_HASH') || empty(SYSTEM_LICENSE_HASH)) {
 
 // 3. DOMAIN LOCK (Security Feature)
 // Prevent the system from running on unauthorized domains
-$allowed_domains = ['devify.live', 'localhost', '127.0.0.1'];
+$allowed_domains = ['devify.live', 'www.devify.live', 'localhost', '127.0.0.1'];
 $current_domain = $_SERVER['HTTP_HOST'] ?? '';
 // Remove port number if present
 $current_domain = explode(':', $current_domain)[0];
