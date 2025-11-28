@@ -7,17 +7,25 @@
 session_start();
 require_once 'config/db.php';
 
-// Optional: Restrict to logged-in admins/examiners
-// if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'examiner') {
-//     die("Access Denied.");
-// }
+// SECURITY: Require Admin Login OR Secret Key
+// Since we might be resetting because we can't login, let's use the Secret Key from credentials.php
+if (!defined('SYSTEM_LICENSE_HASH')) {
+    die("Access Denied: System License Missing.");
+}
+
+// Simple text password for this critical action
+$RESET_PASSWORD = 'DELETE_MY_DATA_NOW'; 
 
 $message = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_reset']) && $_POST['confirm_reset'] === 'yes') {
     
-    mysqli_begin_transaction($conn);
+    if (!isset($_POST['reset_password']) || $_POST['reset_password'] !== $RESET_PASSWORD) {
+        $error = "Incorrect Confirmation Password.";
+    } else {
+        mysqli_begin_transaction($conn);
+
 
     try {
         // 1. Delete Student Activity Data
@@ -84,6 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_reset']) && $
                     </p>
 
                     <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Type "DELETE_MY_DATA_NOW" to confirm:</label>
+                            <input type="text" class="form-control text-center" name="reset_password" placeholder="Enter confirmation password" required>
+                        </div>
+
                         <div class="mb-3 form-check d-inline-block text-start">
                             <input type="checkbox" class="form-check-input" id="confirm" name="confirm_reset" value="yes" required>
                             <label class="form-check-label" for="confirm">I understand that all data will be lost forever.</label>
@@ -100,3 +113,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_reset']) && $
     </div>
 </body>
 </html>
+
+
+

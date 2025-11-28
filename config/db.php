@@ -20,6 +20,19 @@ if (!defined('SYSTEM_LICENSE_HASH') || empty(SYSTEM_LICENSE_HASH)) {
     die("<h1>Access Denied</h1><p>Invalid System License.</p>");
 }
 
+// 3. DOMAIN LOCK (Security Feature)
+// Prevent the system from running on unauthorized domains
+$allowed_domains = ['devify.live', 'localhost', '127.0.0.1'];
+$current_domain = $_SERVER['HTTP_HOST'] ?? '';
+// Remove port number if present
+$current_domain = explode(':', $current_domain)[0];
+
+if (!in_array($current_domain, $allowed_domains)) {
+    die("<h1>Unauthorized Domain</h1>
+         <p>This software is licensed only for use on authorized domains.</p>
+         <p>Detected Domain: " . htmlspecialchars($current_domain) . "</p>");
+}
+
 // Auto-detect environment
 $is_production = (strpos($_SERVER['HTTP_HOST'] ?? '', 'devify.live') !== false) || (strpos(__DIR__, '/home/u414525231') !== false) || (php_sapi_name() == 'cli' && getenv('APP_ENV') == 'production');
 
