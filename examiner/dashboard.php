@@ -87,6 +87,11 @@ $unread_notifications = $unread_data['unread_count'] ?? 0;
                         <i class="fas fa-cog"></i> Settings
                     </a>
                 </li>
+                <li>
+                    <a href="help.php" class="sidebar-link">
+                        <i class="fas fa-question-circle"></i> Help
+                    </a>
+                </li>
             </ul>
         </nav>
 
