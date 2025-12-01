@@ -135,6 +135,31 @@ $average_score = round($avg_result['avg_score'] ?? 0, 1);
             </header>
 
             <div class="dashboard-padding">
+                <!-- Alerts -->
+                <?php if (isset($_SESSION['success'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm border-0 border-start border-4 border-success" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle me-3 fa-lg"></i>
+                            <div>
+                                <strong>Success!</strong> <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm border-0 border-start border-4 border-danger" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-circle me-3 fa-lg"></i>
+                            <div>
+                                <strong>Error!</strong> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Stats Grid -->
                 <div class="stats-grid mb-5">
                     <div class="stat-card">
