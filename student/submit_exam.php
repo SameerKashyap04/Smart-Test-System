@@ -168,5 +168,6 @@ foreach ($answers as $answer) {
 
 // Redirect to dashboard with success message
 $_SESSION['success'] = "Exam submitted successfully! Your score: $total_score/$total_marks (" . number_format($percentage_score, 2) . "%)";
+session_write_close();
 header("Location: dashboard.php");
 exit(); 

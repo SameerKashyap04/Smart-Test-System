@@ -2,6 +2,11 @@
 session_start();
 require_once '../config/db.php';
 
+// Prevent caching to ensure flash messages are shown (especially for Safari)
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 // Enable error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -61,6 +66,17 @@ $average_score = round($avg_result['avg_score'] ?? 0, 1);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-in {
+            animation: slideInDown 0.5s ease-out;
+        }
+        .bg-success-subtle { background-color: #d1fae5 !important; }
+        .bg-danger-subtle { background-color: #fee2e2 !important; }
+    </style>
 </head>
 <body>
     <div class="layout-wrapper">
@@ -137,11 +153,14 @@ $average_score = round($avg_result['avg_score'] ?? 0, 1);
             <div class="dashboard-padding">
                 <!-- Alerts -->
                 <?php if (isset($_SESSION['success'])): ?>
-                    <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm border-0 border-start border-4 border-success" role="alert">
+                    <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm border-0 border-start border-4 border-success animate-slide-in" role="alert">
                         <div class="d-flex align-items-center">
-                            <i class="fas fa-check-circle me-3 fa-lg"></i>
+                            <div class="me-3 bg-success-subtle text-success rounded-circle p-2">
+                                <i class="fas fa-check fa-lg"></i>
+                            </div>
                             <div>
-                                <strong>Success!</strong> <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                                <h6 class="alert-heading fw-bold mb-1">Success!</h6>
+                                <p class="mb-0"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></p>
                             </div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -149,11 +168,14 @@ $average_score = round($avg_result['avg_score'] ?? 0, 1);
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['error'])): ?>
-                    <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm border-0 border-start border-4 border-danger" role="alert">
+                    <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm border-0 border-start border-4 border-danger animate-slide-in" role="alert">
                         <div class="d-flex align-items-center">
-                            <i class="fas fa-exclamation-circle me-3 fa-lg"></i>
+                            <div class="me-3 bg-danger-subtle text-danger rounded-circle p-2">
+                                <i class="fas fa-exclamation-triangle fa-lg"></i>
+                            </div>
                             <div>
-                                <strong>Error!</strong> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                                <h6 class="alert-heading fw-bold mb-1">Error</h6>
+                                <p class="mb-0"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></p>
                             </div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
