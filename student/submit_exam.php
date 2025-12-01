@@ -2,6 +2,10 @@
 session_start();
 require_once '../config/db.php';
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Check if user is logged in and is a student
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: ../index.php");
@@ -69,7 +73,7 @@ while ($question = mysqli_fetch_assoc($questions)) {
 }
 
 // Calculate percentage score
-$percentage_score = ($total_score / $total_marks) * 100;
+$percentage_score = ($total_marks > 0) ? ($total_score / $total_marks) * 100 : 0;
 
 // Check if total_marks column exists in exam_results table
 $check_column_sql = "SHOW COLUMNS FROM exam_results LIKE 'total_marks'";
@@ -163,6 +167,6 @@ foreach ($answers as $answer) {
 }
 
 // Redirect to dashboard with success message
-$_SESSION['message'] = "Exam submitted successfully! Your score: $total_score/$total_marks (" . number_format($percentage_score, 2) . "%)";
+$_SESSION['success'] = "Exam submitted successfully! Your score: $total_score/$total_marks (" . number_format($percentage_score, 2) . "%)";
 header("Location: dashboard.php");
 exit(); 
