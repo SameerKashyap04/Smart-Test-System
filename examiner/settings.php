@@ -131,13 +131,15 @@ if ($res) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Examiner Profile & Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <style>
         .profile-img-container {
             width: 150px;
@@ -183,145 +185,225 @@ if ($res) {
         }
     </style>
 </head>
-<body class="bg-light">
-	<div class="container py-4">
-		<div class="d-flex justify-content-between align-items-center mb-4">
-			<h1 class="h4 mb-0"><i class="fas fa-user-tie me-2"></i>Examiner Profile</h1>
-			<a href="dashboard.php" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
-		</div>
-		<?php if (!empty($error)): ?><div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-		<?php if (!empty($success)): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
-		
-        <div class="row g-4">
-            <!-- Profile Photo & Basic Info -->
-            <div class="col-md-4">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data" id="photoForm">
-                            <input type="hidden" name="action" value="upload_photo">
-                            <div class="profile-img-container" onclick="document.getElementById('profile_photo').click()">
-                                <?php if (!empty($info['profile_image'])): ?>
-                                    <img src="../<?php echo htmlspecialchars($info['profile_image']); ?>" class="profile-img" alt="Profile">
-                                <?php else: ?>
-                                    <div class="profile-placeholder">
-                                        <?php echo strtoupper(substr($info['username'], 0, 1)); ?>
+<body>
+    <div class="layout-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-layer-group me-2"></i> SmartTest
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="dashboard.php" class="sidebar-link">
+                        <i class="fas fa-th-large"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="create_exam.php" class="sidebar-link">
+                        <i class="fas fa-plus-circle"></i> Create Exam
+                    </a>
+                </li>
+                <li>
+                    <a href="view_violations.php" class="sidebar-link">
+                        <i class="fas fa-shield-alt"></i> Violations
+                    </a>
+                </li>
+                <li>
+                    <a href="notifications.php" class="sidebar-link">
+                        <i class="fas fa-bell"></i> Notifications
+                    </a>
+                </li>
+                <li>
+                    <a href="settings.php" class="sidebar-link active">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="help.php" class="sidebar-link">
+                        <i class="fas fa-question-circle"></i> Help
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-link text-muted d-md-none me-3" id="sidebarToggle">
+                        <i class="fas fa-bars fa-lg"></i>
+                    </button>
+                    <h4 class="mb-0">Profile & Settings</h4>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="dropdown">
+                        <div class="user-profile" data-bs-toggle="dropdown">
+                            <div class="user-avatar">
+                                <?php echo strtoupper(substr($info['username'], 0, 1)); ?>
+                            </div>
+                            <span class="d-none d-md-block fw-medium">
+                                <?php echo htmlspecialchars($info['username']); ?>
+                            </span>
+                            <i class="fas fa-chevron-down small text-muted d-none d-md-block"></i>
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2">
+                            <li><a class="dropdown-item active" href="settings.php"><i class="fas fa-user me-2"></i> Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="../auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-padding">
+                <?php if (!empty($error)): ?><div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+                <?php if (!empty($success)): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
+                
+                <div class="row g-4">
+                    <!-- Profile Photo & Basic Info -->
+                    <div class="col-md-4">
+                        <div class="card text-center h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <form method="POST" enctype="multipart/form-data" id="photoForm">
+                                    <input type="hidden" name="action" value="upload_photo">
+                                    <div class="profile-img-container" onclick="document.getElementById('profile_photo').click()">
+                                        <?php if (!empty($info['profile_image'])): ?>
+                                            <img src="../<?php echo htmlspecialchars($info['profile_image']); ?>" class="profile-img" alt="Profile">
+                                        <?php else: ?>
+                                            <div class="profile-placeholder">
+                                                <?php echo strtoupper(substr($info['username'], 0, 1)); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div class="upload-icon"><i class="fas fa-camera"></i> Change</div>
                                     </div>
-                                <?php endif; ?>
-                                <div class="upload-icon"><i class="fas fa-camera"></i> Change</div>
+                                    <input type="file" name="profile_photo" id="profile_photo" class="d-none" accept=".jpg,.jpeg,.png" onchange="document.getElementById('photoForm').submit()">
+                                </form>
+                                
+                                <h4 class="mb-1 fw-bold"><?php echo htmlspecialchars($info['username']); ?></h4>
+                                <p class="text-muted mb-3"><?php echo htmlspecialchars($info['email']); ?></p>
+                                
+                                <div class="list-group list-group-flush text-start rounded">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-university me-2 text-primary"></i>College</span>
+                                        <span class="fw-bold text-truncate" style="max-width: 150px;"><?php echo htmlspecialchars($info['college'] ?: 'Not Set'); ?></span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-code-branch me-2 text-primary"></i>Branch</span>
+                                        <span class="fw-bold"><?php echo htmlspecialchars($info['branch'] ?: 'Not Set'); ?></span>
+                                    </div>
+                                </div>
                             </div>
-                            <input type="file" name="profile_photo" id="profile_photo" class="d-none" accept=".jpg,.jpeg,.png" onchange="document.getElementById('photoForm').submit()">
-                        </form>
-                        
-                        <h4 class="mb-1"><?php echo htmlspecialchars($info['username']); ?></h4>
-                        <p class="text-muted mb-3"><?php echo htmlspecialchars($info['email']); ?></p>
-                        
-                        <div class="list-group list-group-flush text-start">
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-university me-2 text-primary"></i>College</span>
-                                <span class="fw-bold text-truncate" style="max-width: 150px;"><?php echo htmlspecialchars($info['college'] ?: 'Not Set'); ?></span>
+                        </div>
+                    </div>
+
+                    <!-- Edit Details & Settings -->
+                    <div class="col-md-8">
+                        <!-- Personal Details Form -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-white py-3 border-bottom"><h5 class="mb-0 fw-bold"><i class="fas fa-edit me-2 text-primary"></i> Edit Personal Details</h5></div>
+                            <div class="card-body p-4">
+                                <form method="POST">
+                                    <input type="hidden" name="action" value="update_profile">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">College Name</label>
+                                            <input type="text" name="college" class="form-control" value="<?php echo htmlspecialchars($info['college']); ?>" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Branch / Department</label>
+                                            <select class="form-select" name="branch" required>
+                                                <option value="">Select Branch</option>
+                                                <?php 
+                                                $branches = ["Computer Science", "Information Technology", "Electronics & Communication", "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Other"];
+                                                foreach($branches as $b) {
+                                                    $selected = ($info['branch'] == $b) ? 'selected' : '';
+                                                    echo "<option value='$b' $selected>$b</option>";
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
+                                </form>
                             </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-code-branch me-2 text-primary"></i>Branch</span>
-                                <span class="fw-bold"><?php echo htmlspecialchars($info['branch'] ?: 'Not Set'); ?></span>
+                        </div>
+
+                        <!-- ID Card Section -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-white py-3 border-bottom"><h5 class="mb-0 fw-bold"><i class="fas fa-id-card me-2 text-primary"></i> Examiner ID Card</h5></div>
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4 text-center">
+                                        <?php if (!empty($info['id_document_path'])): ?>
+                                            <?php if (preg_match('/\\.(jpg|jpeg|png)$/i', $info['id_document_path'])): ?>
+                                                <img src="../<?php echo htmlspecialchars($info['id_document_path']); ?>" alt="ID" class="img-fluid rounded border mb-2" style="max-height: 150px;" />
+                                            <?php else: ?>
+                                                <div class="p-4 border rounded bg-light mb-2">
+                                                    <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                                </div>
+                                                <a href="../<?php echo htmlspecialchars($info['id_document_path']); ?>" target="_blank" class="btn btn-sm btn-outline-primary mb-2">View Document</a>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <div class="p-4 border rounded bg-light text-muted mb-2">
+                                                <i class="fas fa-id-card fa-3x mb-2"></i><br>No ID Uploaded
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <form method="POST" enctype="multipart/form-data">
+                                            <input type="hidden" name="action" value="upload_id">
+                                            <div class="mb-3">
+                                                <label class="form-label">Upload New ID (JPG, PNG, PDF)</label>
+                                                <input type="file" name="id_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required>
+                                            </div>
+                                            <button class="btn btn-primary"><i class="fas fa-upload me-1"></i> Upload ID</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Change Password -->
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3 border-bottom"><h5 class="mb-0 fw-bold"><i class="fas fa-key me-2 text-primary"></i> Security</h5></div>
+                            <div class="card-body p-4">
+                                <form method="POST">
+                                    <input type="hidden" name="action" value="change_password">
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Current Password</label>
+                                            <input type="password" name="current_password" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">New Password</label>
+                                            <input type="password" name="new_password" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Confirm Password</label>
+                                            <input type="password" name="confirm_password" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-warning text-white"><i class="fas fa-lock me-1"></i> Update Password</button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </main>
+    </div>
 
-            <!-- Edit Details & Settings -->
-			<div class="col-md-8">
-                <!-- Personal Details Form -->
-				<div class="card mb-4">
-					<div class="card-header"><i class="fas fa-edit me-2"></i> Edit Personal Details</div>
-					<div class="card-body">
-						<form method="POST">
-							<input type="hidden" name="action" value="update_profile">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">College Name</label>
-                                    <input type="text" name="college" class="form-control" value="<?php echo htmlspecialchars($info['college']); ?>" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Branch / Department</label>
-                                    <select class="form-select" name="branch" required>
-                                        <option value="">Select Branch</option>
-                                        <?php 
-                                        $branches = ["Computer Science", "Information Technology", "Electronics & Communication", "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Other"];
-                                        foreach($branches as $b) {
-                                            $selected = ($info['branch'] == $b) ? 'selected' : '';
-                                            echo "<option value='$b' $selected>$b</option>";
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                            </div>
-							<button class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
-						</form>
-					</div>
-				</div>
-
-                <!-- ID Card Section -->
-				<div class="card mb-4">
-					<div class="card-header"><i class="fas fa-id-card me-2"></i> Examiner ID Card</div>
-					<div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 text-center">
-                                <?php if (!empty($info['id_document_path'])): ?>
-                                    <?php if (preg_match('/\\.(jpg|jpeg|png)$/i', $info['id_document_path'])): ?>
-                                        <img src="../<?php echo htmlspecialchars($info['id_document_path']); ?>" alt="ID" class="img-fluid rounded border mb-2" style="max-height: 150px;" />
-                                    <?php else: ?>
-                                        <div class="p-4 border rounded bg-light mb-2">
-                                            <i class="fas fa-file-pdf fa-3x text-danger"></i>
-                                        </div>
-                                        <a href="../<?php echo htmlspecialchars($info['id_document_path']); ?>" target="_blank" class="btn btn-sm btn-outline-primary mb-2">View Document</a>
-                                    <?php endif; ?>
-                                <?php else: ?>
-                                    <div class="p-4 border rounded bg-light text-muted mb-2">
-                                        <i class="fas fa-id-card fa-3x mb-2"></i><br>No ID Uploaded
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="col-md-8">
-                                <form method="POST" enctype="multipart/form-data">
-                                    <input type="hidden" name="action" value="upload_id">
-                                    <div class="mb-3">
-                                        <label class="form-label">Upload New ID (JPG, PNG, PDF)</label>
-                                        <input type="file" name="id_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required>
-                                    </div>
-                                    <button class="btn btn-primary"><i class="fas fa-upload me-1"></i> Upload ID</button>
-                                </form>
-                            </div>
-                        </div>
-					</div>
-				</div>
-
-                <!-- Change Password -->
-				<div class="card">
-					<div class="card-header"><i class="fas fa-key me-2"></i> Security</div>
-					<div class="card-body">
-						<form method="POST">
-							<input type="hidden" name="action" value="change_password">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Current Password</label>
-                                    <input type="password" name="current_password" class="form-control" required>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">New Password</label>
-                                    <input type="password" name="new_password" class="form-control" required>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Confirm Password</label>
-                                    <input type="password" name="confirm_password" class="form-control" required>
-                                </div>
-                            </div>
-							<button class="btn btn-warning text-white"><i class="fas fa-lock me-1"></i> Update Password</button>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/theme.js"></script>
+    <script>
+        // Mobile Sidebar Toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+    </script>
 </body>
 </html>
