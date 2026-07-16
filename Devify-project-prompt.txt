@@ -26,99 +26,69 @@ Write it as a CLIENT-FACING SALES DOCUMENT for the company Devify (devify.co.in)
 The goal of this document is to impress a potential client and convince them
 to fill the contact form at devify.co.in/contact.
 
-Follow this EXACT structure and formatting style:
+You MUST write the file in standard, clean Markdown format so it renders
+beautifully inside a ReactMarkdown prose element on the devify.co.in website.
+Do NOT use custom text box drawings (like ┌───┐ or ━━━━━━━━), custom padding,
+or manual line wrapping. Let the browser handle layout flow and wrapping naturally.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                        [PROJECT NAME IN CAPS]
-              [One-line category / type of product]
-                    A Product by  Devify  |  devify.co.in
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Follow this EXACT structure and Markdown styling:
 
-  "[A single punchy quote / tagline that captures the product's promise]"
+# [PROJECT NAME]
+### [One-line category / type of product]
+> **"[A single punchy quote / tagline that captures the product's promise]"**
 
-───────────────────────────────────────────────────────────────────────────────
-  THE PROBLEM WE SOLVE
-───────────────────────────────────────────────────────────────────────────────
-  [2-4 lines describing the real-world pain point this product eliminates.
-   Write in plain language — no jargon. Speak to a non-technical client.]
+---
 
-───────────────────────────────────────────────────────────────────────────────
-  WHAT IT DOES  (Core Functions)
-───────────────────────────────────────────────────────────────────────────────
-  [List 4-6 core functions using the ◉ bullet style. Under each function,
-   use indented bullet points (•) to list specific capabilities in plain
-   English. Focus on WHAT it does for the user, not HOW it works internally.
-   No code. No technical implementation details.]
+## 🔍 The Problem We Solve
+[2-4 sentences describing the real-world pain point this product eliminates.
+ Write in plain language — no jargon. Speak to a non-technical client.]
 
-  ◉  [FUNCTION NAME IN CAPS]
-     [1-2 sentences describing what this function does for the user]
+---
 
-       • [specific capability]
-       • [specific capability]
-       • [specific capability]
+## ⚡ Core Functions
+[List 4-6 core functions using Markdown bullet points (*).
+ For each item, bold the function name and add a short description.
+ Focus on WHAT it does for the user, not how it works internally. No code.]
+*   **[Function Name]:** [Short description of what it does]
+*   **[Function Name]:** [Short description of what it does]
 
-───────────────────────────────────────────────────────────────────────────────
-  TECHNOLOGY POWERING IT
-───────────────────────────────────────────────────────────────────────────────
-  [One sentence intro: "We built this using proven, industry-grade
-   technologies — no gimmicks:"]
+---
 
-  [A simple table with two columns: "Layer" and "Technology".
-   Keep layers high-level: Backend, Database, Frontend, AI/ML, etc.
-   Do NOT explain how they work. Just list them confidently.]
+## 🛠️ Technology Stack
+We developed this platform using robust, industry-grade technologies to guarantee performance:
 
-  [End with one sentence: "Everything runs directly in [browser/app/cloud]
-   — no [drawbacks like: downloads, plugins, subscriptions] needed."]
+[Create a standard Markdown table showing the stack layers and technologies used]
+| Layer | Technology Used |
+| :--- | :--- |
+| **Backend & APIs** | [Tech name] |
+| **Database Layer** | [Tech name] |
+| **User Interface** | [Tech name] |
 
-───────────────────────────────────────────────────────────────────────────────
-  REAL-WORLD IMPACT  (Why It Matters)
-───────────────────────────────────────────────────────────────────────────────
-  [Break into 3-4 audience groups relevant to the product. Use emojis for
-   each group header. Under each group, write 3-4 bullet points with → arrows
-   showing the DIRECT BENEFIT to that group's daily life or work.
-   Write impact in human terms: time saved, money saved, stress reduced,
-   fairness restored, accessibility improved, etc.]
+*Everything runs directly in the [browser/app/cloud] — no [downloads/subscriptions] required.*
 
-  [Always end with a "BROADER IMPACT" or "🌍 SOCIETY" section showing the
-   wider positive change this product creates in the world.]
+---
 
-───────────────────────────────────────────────────────────────────────────────
-  WHY DEVIFY BUILT THIS
-───────────────────────────────────────────────────────────────────────────────
-  [3-4 sentences. Tell the brand story behind this product. Why did Devify
-   choose to build this? What values drove the decision? Keep it emotional,
-   honest, and human. End with Devify's mission statement in one sentence:
-   "We turn complex problems into simple, powerful digital solutions —
-    on time, on budget, and beyond expectations."]
+## 🌍 Real-World & Day-to-Day Impact
+[Break down the impact in human terms for 3-4 groups using Markdown bullet points.
+ Use bold headers for the groups. Describe time saved, money saved, accessibility, etc.]
+*   **For [Group 1]:** [Direct benefit in day-to-day life]
+*   **For [Group 2]:** [Direct benefit in day-to-day life]
+*   **For Society & Impact:** [Broader positive change in the world]
 
-───────────────────────────────────────────────────────────────────────────────
-  READY TO BUILD SOMETHING LIKE THIS FOR YOUR ORGANISATION?
-───────────────────────────────────────────────────────────────────────────────
-  [2 lines of intro offering to build something similar for the client.]
+---
 
-  ✦  WEBSITE  :  devify.co.in
-  ✦  CONTACT  :  devify.co.in/contact
-  ✦  EMAIL    :  contact@devify.co.in
+## 🤝 Build Your Next Innovation with Devify
+At **Devify**, we transform complex technical hurdles into intuitive, high-impact digital products. [1-2 sentences relating this project to Devify's capability.]
 
-  [A boxed CTA block — use box-drawing characters — with the message:
-   "Fill out our contact form at devify.co.in/contact and our team
-   will get back to you within 24 hours with a custom proposal.
-   Let's build your next big idea — together."]
+If you are looking to build a custom solution, let's partner together to make it a reality.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  © 2025 Devify.  All Rights Reserved.  |  devify.co.in
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+### ✉️ Let's Discuss Your Project
+*   **Website:** [devify.co.in](https://devify.co.in)
+*   **Contact Form:** [devify.co.in/contact](https://devify.co.in/contact)
+*   **Direct Email:** [contact@devify.co.in](mailto:contact@devify.co.in)
 
-STRICT RULES — DO NOT BREAK THESE:
-  ✗  No code blocks, no SQL, no file trees, no JSON, no changelogs
-  ✗  No technical deep-dives (no API names, no function names, no schemas)
-  ✗  No installation guides or developer documentation
-  ✗  No jargon a non-technical client would not understand
-  ✓  Write for a BUSINESS OWNER or DECISION MAKER, not a developer
-  ✓  Every sentence must answer: "What does this mean for ME, the client?"
-  ✓  Keep the total document under 150 lines
-  ✓  Use the exact separator styles shown: ━━━ for headers, ─── for sections
-  ✓  Use devify.co.in (not devify.live or any other domain)
+> **Ready to get started?**
+> [Fill out our Contact Form](https://devify.co.in/contact) and our executive team will review your requirements and provide a custom proposal within 24 hours. Let's create your next breakthrough.
 
 ---- PROMPT END ----
 
@@ -127,15 +97,13 @@ STRICT RULES — DO NOT BREAK THESE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   [ ]  File is named  Devify-project.txt  inside the project folder
-  [ ]  Header shows the correct project name
+  [ ]  Standard Markdown is used (no custom unicode box-drawings or divider lines)
   [ ]  Domain is devify.co.in (not devify.live)
   [ ]  Email is contact@devify.co.in
   [ ]  No code, no JSON, no file trees in the document
-  [ ]  Document is under 150 lines
-  [ ]  CTA box at the bottom is present and correctly formatted
-  [ ]  "Why Devify Built This" section feels human and genuine
+  [ ]  "Why Devify Built This" section is client-oriented
   [ ]  Technology table is present but names only — no explanations
-  [ ]  Impact section covers end-users, clients, AND broader society
+  [ ]  Impact section covers end-users, clients, and society
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   © 2025 Devify.  Internal Use Only.  |  devify.co.in
