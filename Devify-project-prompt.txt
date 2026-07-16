@@ -1,0 +1,142 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DEVIFY — MASTER PROMPT TEMPLATE
+  Use this prompt for every new project to generate the sales document
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HOW TO USE:
+  1. Clone / open the project repository.
+  2. Give the AI agent access to the project folder.
+  3. Paste the PROMPT below exactly as written.
+  4. The agent will read the project and produce the document.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────────────────────────────────────────────
+PROMPT  (copy everything between the START and END markers)
+────────────────────────────────────────────────────────────────────────────────
+
+---- PROMPT START ----
+
+Read all the files in this project folder thoroughly — including the README,
+main source files, database/schema files, and any config or spec documents.
+
+Then create a file called "Devify-project.txt" inside the project folder.
+
+Write it as a CLIENT-FACING SALES DOCUMENT for the company Devify (devify.co.in).
+The goal of this document is to impress a potential client and convince them
+to fill the contact form at devify.co.in/contact.
+
+Follow this EXACT structure and formatting style:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        [PROJECT NAME IN CAPS]
+              [One-line category / type of product]
+                    A Product by  Devify  |  devify.co.in
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  "[A single punchy quote / tagline that captures the product's promise]"
+
+───────────────────────────────────────────────────────────────────────────────
+  THE PROBLEM WE SOLVE
+───────────────────────────────────────────────────────────────────────────────
+  [2-4 lines describing the real-world pain point this product eliminates.
+   Write in plain language — no jargon. Speak to a non-technical client.]
+
+───────────────────────────────────────────────────────────────────────────────
+  WHAT IT DOES  (Core Functions)
+───────────────────────────────────────────────────────────────────────────────
+  [List 4-6 core functions using the ◉ bullet style. Under each function,
+   use indented bullet points (•) to list specific capabilities in plain
+   English. Focus on WHAT it does for the user, not HOW it works internally.
+   No code. No technical implementation details.]
+
+  ◉  [FUNCTION NAME IN CAPS]
+     [1-2 sentences describing what this function does for the user]
+
+       • [specific capability]
+       • [specific capability]
+       • [specific capability]
+
+───────────────────────────────────────────────────────────────────────────────
+  TECHNOLOGY POWERING IT
+───────────────────────────────────────────────────────────────────────────────
+  [One sentence intro: "We built this using proven, industry-grade
+   technologies — no gimmicks:"]
+
+  [A simple table with two columns: "Layer" and "Technology".
+   Keep layers high-level: Backend, Database, Frontend, AI/ML, etc.
+   Do NOT explain how they work. Just list them confidently.]
+
+  [End with one sentence: "Everything runs directly in [browser/app/cloud]
+   — no [drawbacks like: downloads, plugins, subscriptions] needed."]
+
+───────────────────────────────────────────────────────────────────────────────
+  REAL-WORLD IMPACT  (Why It Matters)
+───────────────────────────────────────────────────────────────────────────────
+  [Break into 3-4 audience groups relevant to the product. Use emojis for
+   each group header. Under each group, write 3-4 bullet points with → arrows
+   showing the DIRECT BENEFIT to that group's daily life or work.
+   Write impact in human terms: time saved, money saved, stress reduced,
+   fairness restored, accessibility improved, etc.]
+
+  [Always end with a "BROADER IMPACT" or "🌍 SOCIETY" section showing the
+   wider positive change this product creates in the world.]
+
+───────────────────────────────────────────────────────────────────────────────
+  WHY DEVIFY BUILT THIS
+───────────────────────────────────────────────────────────────────────────────
+  [3-4 sentences. Tell the brand story behind this product. Why did Devify
+   choose to build this? What values drove the decision? Keep it emotional,
+   honest, and human. End with Devify's mission statement in one sentence:
+   "We turn complex problems into simple, powerful digital solutions —
+    on time, on budget, and beyond expectations."]
+
+───────────────────────────────────────────────────────────────────────────────
+  READY TO BUILD SOMETHING LIKE THIS FOR YOUR ORGANISATION?
+───────────────────────────────────────────────────────────────────────────────
+  [2 lines of intro offering to build something similar for the client.]
+
+  ✦  WEBSITE  :  devify.co.in
+  ✦  CONTACT  :  devify.co.in/contact
+  ✦  EMAIL    :  contact@devify.co.in
+
+  [A boxed CTA block — use box-drawing characters — with the message:
+   "Fill out our contact form at devify.co.in/contact and our team
+   will get back to you within 24 hours with a custom proposal.
+   Let's build your next big idea — together."]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  © 2025 Devify.  All Rights Reserved.  |  devify.co.in
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRICT RULES — DO NOT BREAK THESE:
+  ✗  No code blocks, no SQL, no file trees, no JSON, no changelogs
+  ✗  No technical deep-dives (no API names, no function names, no schemas)
+  ✗  No installation guides or developer documentation
+  ✗  No jargon a non-technical client would not understand
+  ✓  Write for a BUSINESS OWNER or DECISION MAKER, not a developer
+  ✓  Every sentence must answer: "What does this mean for ME, the client?"
+  ✓  Keep the total document under 150 lines
+  ✓  Use the exact separator styles shown: ━━━ for headers, ─── for sections
+  ✓  Use devify.co.in (not devify.live or any other domain)
+
+---- PROMPT END ----
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  QUICK CHECKLIST  (After the document is generated, verify these)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [ ]  File is named  Devify-project.txt  inside the project folder
+  [ ]  Header shows the correct project name
+  [ ]  Domain is devify.co.in (not devify.live)
+  [ ]  Email is contact@devify.co.in
+  [ ]  No code, no JSON, no file trees in the document
+  [ ]  Document is under 150 lines
+  [ ]  CTA box at the bottom is present and correctly formatted
+  [ ]  "Why Devify Built This" section feels human and genuine
+  [ ]  Technology table is present but names only — no explanations
+  [ ]  Impact section covers end-users, clients, AND broader society
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  © 2025 Devify.  Internal Use Only.  |  devify.co.in
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

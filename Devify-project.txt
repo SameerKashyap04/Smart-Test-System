@@ -1,0 +1,149 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        SMART TEST SYSTEM
+              AI-Powered Online Examination Platform
+                    A Product by  Devify  |  devify.co.in
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  "Conduct 100% fair, cheat-proof exams online —
+   no human proctors needed, no extra software, zero compromise."
+
+───────────────────────────────────────────────────────────────────────────────
+  THE PROBLEM WE SOLVE
+───────────────────────────────────────────────────────────────────────────────
+
+  Every day, thousands of students cheat on online exams. Institutions either
+  spend heavily on human supervisors or accept the risk. We built Smart Test
+  System to eliminate both problems — delivering exam integrity automatically,
+  at a fraction of the cost.
+
+───────────────────────────────────────────────────────────────────────────────
+  WHAT IT DOES  (Core Functions)
+───────────────────────────────────────────────────────────────────────────────
+
+  ◉  REAL-TIME AI PROCTORING
+     The system watches the student through their own webcam and microphone
+     during the entire exam. It detects:
+
+       • Face turned away or absent from screen
+       • A second person appearing in the frame
+       • Mobile phone, book, or laptop visible on camera
+       • Student speaking or unusual background noise
+       • Suspicious keywords spoken (e.g. "Hey Google", "Alexa")
+
+     On any violation, the exam AUTOMATICALLY freezes and the examiner
+     is notified instantly — no human supervisor required.
+
+  ◉  SECURE EXAM CREATION (Examiner Dashboard)
+     Teachers and institutions can:
+
+       • Create exams in minutes with custom duration, marks & subjects
+       • Lock exams to specific college departments or branches
+       • Protect access with a unique Secret Key per exam
+       • Upload questions with images, edit, and manage a question bank
+       • View every student's score, violation history & result report
+
+  ◉  STUDENT EXAM ENVIRONMENT
+     Students get a distraction-free, tamper-proof interface:
+
+       • Full-screen mode — cannot exit without triggering a warning
+       • Copy, paste & right-click are fully disabled
+       • Automatic timer with instant submission on timeout
+       • Real-time on-screen warnings for any detected rule break
+
+  ◉  COMPLETE VIOLATION AUDIT LOG
+     Every single suspicious event is recorded with a timestamp.
+     Examiners get a forensic-level report after each exam — perfect for
+     appeals, grievance handling, and institutional compliance.
+
+  ◉  SMART NOTIFICATIONS
+     Examiners receive live alerts the moment a student starts or
+     submits an exam, and are notified instantly of any critical violation.
+
+───────────────────────────────────────────────────────────────────────────────
+  TECHNOLOGY POWERING IT
+───────────────────────────────────────────────────────────────────────────────
+
+  We built this using proven, industry-grade technologies — no gimmicks:
+
+  ┌─────────────────────────┬────────────────────────────────────────────────┐
+  │  Layer                  │  Technology                                    │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │  Backend (Server)       │  PHP 8 — fast, reliable, battle-tested        │
+  │  Database               │  MySQL — structured, secure, scalable          │
+  │  Frontend               │  HTML5 · Tailwind CSS · Bootstrap 5            │
+  │  Face Detection & AI    │  MediaPipe · face-api.js · TensorFlow.js       │
+  │  Voice & Audio Analysis │  Web Audio API · Web Speech API                │
+  │  Anti-Cheat Layers      │  WebGL API · Canvas API · Page Visibility API  │
+  └─────────────────────────┴────────────────────────────────────────────────┘
+
+  Everything runs directly in the student's browser — no app downloads,
+  no plugins, no third-party proctoring subscriptions needed.
+
+───────────────────────────────────────────────────────────────────────────────
+  REAL-WORLD IMPACT  (Why It Matters)
+───────────────────────────────────────────────────────────────────────────────
+
+  👩‍🏫  FOR TEACHERS & INSTITUTIONS
+     → Save thousands of ₹/$ spent on human proctors per exam session.
+     → Conduct exams for hundreds of students simultaneously from anywhere.
+     → Get instant, evidence-backed violation reports — no guesswork.
+     → Eliminate exam-day logistics: no halls, no invigilators, no delays.
+
+  🧑‍🎓  FOR STUDENTS
+     → Fair exams — hard-working students are no longer disadvantaged
+       by classmates who cheat.
+     → Exam from the comfort of home, with a safe and guided experience.
+     → Instant results and transparent scoring — no waiting weeks.
+
+  🏫  FOR EDUCATIONAL ORGANISATIONS
+     → Scale online exams across multiple colleges, branches, and batches
+       from a single dashboard.
+     → Full audit trail keeps the institution compliant and litigation-proof.
+     → Competitive edge — offer a modern, tech-forward examination experience
+       to students and faculty.
+
+  🌍  BROADER IMPACT
+     → Makes quality, proctored testing accessible to students in remote areas
+       who cannot travel to exam centres.
+     → Reduces paper usage — 100% digital examination workflow.
+     → Frees up educator time so teachers focus on teaching, not supervising.
+
+───────────────────────────────────────────────────────────────────────────────
+  WHY DEVIFY BUILT THIS
+───────────────────────────────────────────────────────────────────────────────
+
+  At Devify, we don't just build software — we solve real problems that
+  affect real people every day. Smart Test System was built because exam
+  integrity matters. A fair exam changes a student's life. An unfair one
+  destroys it.
+
+  We combined cutting-edge AI, clean engineering, and deep domain knowledge
+  to deliver a product that institutions can trust and students can rely on.
+
+  This is what Devify does. We turn complex problems into simple, powerful
+  digital solutions — on time, on budget, and beyond expectations.
+
+───────────────────────────────────────────────────────────────────────────────
+  READY TO BUILD SOMETHING LIKE THIS FOR YOUR ORGANISATION?
+───────────────────────────────────────────────────────────────────────────────
+
+  Whether you need a custom examination platform, an AI-powered web app,
+  or a full digital transformation — our team at Devify is ready to make
+  it happen.
+
+  ✦  WEBSITE  :  devify.co.in
+  ✦  CONTACT  :  devify.co.in/contact
+  ✦  EMAIL    :  contact@devify.co.in
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                                                                         │
+  │   Fill out our contact form at  devify.co.in/contact  and our team      │
+  │   will get back to you within 24 hours with a custom proposal.         │
+  │                                                                         │
+  │   Let's build your next big idea — together.                           │
+  │                                                                         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  © 2025 Devify.  All Rights Reserved.  |  devify.co.in
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
